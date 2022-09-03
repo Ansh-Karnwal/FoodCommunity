@@ -11,21 +11,6 @@ public class FoodDrive {
     private Calendar calendar;
     private String additionalInformation = null;
 
-    public FoodDrive(String name, String address, String foodList, Calendar calendar) {
-        this.name = name;
-        this.address = address;
-        this.foodList = foodList;
-        this.calendar = calendar;
-    }
-
-    public FoodDrive(String name, String address, String foodList, Calendar calendar, String additionalInformation) {
-        this.name = name;
-        this.address = address;
-        this.foodList = foodList;
-        this.calendar = calendar;
-        this.additionalInformation = additionalInformation;
-    }
-
     public String getName() {
         return name;
     }

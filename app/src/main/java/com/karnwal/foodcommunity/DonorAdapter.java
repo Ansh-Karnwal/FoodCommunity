@@ -55,7 +55,7 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
 
     @Override
     public int getItemCount() {
-        return 0;
+        return listData.size();
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
@@ -70,6 +70,8 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
             foodListTxt = itemView.findViewById(R.id.foodListId);
             dateTxt = itemView.findViewById(R.id.dateId);
             additionalInformationTxt = itemView.findViewById(R.id.additionalInformationID);
+            imgEdit = itemView.findViewById(R.id.imgEdit);
+            imgDelete = itemView.findViewById(R.id.imgDelete);
         }
     }
 
