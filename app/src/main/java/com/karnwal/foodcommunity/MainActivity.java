@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private Geocoder geocoder;
     private DatabaseReference mDataBase = FirebaseDatabase.getInstance().getReference();
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    protected static String zipcode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 10);
                         Address address = addresses.get(0);
+                        zipcode = address.getPostalCode();
                         mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue(address.getPostalCode());
                     }
                     catch (IOException e) {
@@ -115,7 +117,9 @@ public class MainActivity extends AppCompatActivity {
                     mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if (snapshot.exists()) {}
+                            if (snapshot.exists()) {
+                                zipcode = snapshot.getValue(String.class);
+                            }
                             else {
                                 Toast.makeText(MainActivity.this, "Enter Zip Code Manually", Toast.LENGTH_LONG).show();
                                 openDialog();
@@ -158,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 10);
             Address address = addresses.get(0);
+            zipcode = address.getPostalCode();
             mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue(address.getPostalCode());
         }
         catch (IOException e) {

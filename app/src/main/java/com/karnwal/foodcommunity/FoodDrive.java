@@ -1,14 +1,10 @@
 package com.karnwal.foodcommunity;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-
 public class FoodDrive {
     private String name;
     private String address;
     private String foodList;
-    private Calendar calendar;
+    private String calendar;
     private String additionalInformation = null;
 
     public String getName() {
@@ -23,22 +19,8 @@ public class FoodDrive {
         return foodList;
     }
 
-    public Calendar getCalendar() {
+    public String getCalendar() {
         return calendar;
-    }
-
-    public String getDate() {
-        Date date = calendar.getTime();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String inActiveDate = null;
-        try {
-            inActiveDate = simpleDateFormat.format(date);
-            return inActiveDate;
-        }
-        catch (Exception exception) {
-            exception.printStackTrace();
-            return "";
-        }
     }
 
     public String getAdditionalInformation() {
@@ -57,11 +39,22 @@ public class FoodDrive {
         this.foodList = foodList;
     }
 
-    public void setCalendar(Calendar calendar) {
+    public void setCalendar(String calendar) {
         this.calendar = calendar;
     }
 
     public void setAdditionalInformation(String additionalInformation) {
         this.additionalInformation = additionalInformation;
+    }
+
+    @Override
+    public String toString() {
+        return "FoodDrive{" +
+                "name='" + name + '\'' +
+                ", address='" + address + '\'' +
+                ", foodList='" + foodList + '\'' +
+                ", calendar='" + calendar + '\'' +
+                ", additionalInformation='" + additionalInformation + '\'' +
+                '}';
     }
 }

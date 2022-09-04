@@ -1,12 +1,17 @@
 package com.karnwal.foodcommunity;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,28 +20,57 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.karnwal.foodcommunity.databinding.EditDonorBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
 import com.karnwal.foodcommunity.databinding.FragmentDonorBinding;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected {
 
     private AlertDialog alertDialog;
     private FragmentDonorBinding binding;
     private DonorAdapter adapter;
-    private ArrayList<FoodDrive> donorArrayList;
+    private ArrayList<FoodDrive> donorArrayList = new ArrayList<>();
+    private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+    private DatabaseReference reference;
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private UUID uuid = new UUID(8, 8);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        executor.execute(() -> {
+            for(;;) {
+                try {
+                    reference = FirebaseDatabase.getInstance().getReference().child(MainActivity.zipcode);
+                    if (MainActivity.zipcode != null) {
+                        break;
+                    }
+                }
+                catch (Exception ignored) {
+                    Log.e("Error : ", "" + ignored.getMessage());
+                }
+            }
+        });
         binding = FragmentDonorBinding.inflate(inflater, container, false);
-        donorArrayList = new ArrayList<>();
         binding.foodDriveRecycler.setHasFixedSize(true);
         binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
+        loadData();
         binding.addButton.setOnClickListener(v -> {
             DonorDialogFragment dialog = new DonorDialogFragment();
             dialog.setTargetFragment(DonorFragment.this, 1);
@@ -45,18 +79,56 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         return binding.getRoot();
     }
 
+    private void loadData() {
+//        executor.execute(() -> {
+//            reference.addValueEventListener(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                    GenericTypeIndicator<HashMap<String, FoodDrive>> genericTypeIndicator = new GenericTypeIndicator<HashMap<String, FoodDrive>>() {};
+//                    HashMap<String, FoodDrive> foodDrives = snapshot.getValue(genericTypeIndicator);
+//                    if(foodDrives != null)
+//                        donorArrayList = new ArrayList<>(foodDrives.values());
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError error) {
+//                    Log.e("Error: ", "" + error);
+//                }
+//            });
+//        });
+        executor.execute(() -> {
+            reference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        });
+        new Handler().postDelayed(() -> {
+            adapter.notifyDataSetChanged();
+        }, 1000);
+    }
+
     @Override
-    public void sendInput(String name, String address, String foodList, Calendar calendar, String additionalInformation) {
+    public void sendInput(String name, String address, String foodList, String calendar, String additionalInformation) {
         addFoodDrive(name, address, foodList, calendar, additionalInformation);
     }
 
-    private void addFoodDrive(String name, String address, String foodList, Calendar calendar, String additionalInformation) {
+    private void addFoodDrive(String name, String address, String foodList, String calendar, String additionalInformation) {
         FoodDrive foodDrive = new FoodDrive();
         foodDrive.setName(name);
         foodDrive.setAddress(address);
         foodDrive.setFoodList(foodList);
         foodDrive.setAdditionalInformation(additionalInformation);
         foodDrive.setCalendar(calendar);
+        executor.execute(() -> reference.child(String.valueOf(UUID.randomUUID())).setValue(foodDrive));
         donorArrayList.add(foodDrive);
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
@@ -71,13 +143,41 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         EditText additionalInformation = view.findViewById(R.id.editadditionalInformation);
         ImageView closeAlert = view.findViewById(R.id.editcloseAlert);
         Button addButton = view.findViewById(R.id.editButton);
+        Button editDate = view.findViewById(R.id.editchooseDate);
         name.setText(foodDrive.getName());
         address.setText(foodDrive.getAddress());
-        foodList.setText(foodDrive.getFoodList());
+        foodList.setText(foodDrive.getCalendar());
         additionalInformation.setText(foodDrive.getAdditionalInformation());
         builderObj.setView(view);
         builderObj.setCancelable(false);
         closeAlert.setOnClickListener(v -> alertDialog.cancel());
+        final String[] mCalendar = new String[2];
+        editDate.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int YEAR = calendar.get(Calendar.YEAR);
+            int MONTH = calendar.get(Calendar.MONTH);
+            int DATE = calendar.get(Calendar.DATE);
+            int HOUR = calendar.get(Calendar.HOUR);
+            int MINUTE = calendar.get(Calendar.MINUTE);
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this.getActivity(), (view1, year, month, date) -> {
+                Calendar currentCalendar = Calendar.getInstance();
+                currentCalendar.set(Calendar.YEAR, year);
+                currentCalendar.set(Calendar.MONTH, month);
+                currentCalendar.set(Calendar.DATE, date);
+                mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", currentCalendar)).toString();
+                editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
+            }, YEAR, MONTH, DATE);
+            datePickerDialog.setCancelable(false);
+            datePickerDialog.show();
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this.getActivity(), (view1, hour, minute) -> {
+                Calendar currentCalendar = Calendar.getInstance();
+                currentCalendar.set(Calendar.HOUR, hour);
+                currentCalendar.set(Calendar.MINUTE, minute);
+                mCalendar[1] = (DateFormat.format("hh:mm aa", currentCalendar)).toString();
+                editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
+            }, HOUR, MINUTE, DateFormat.is24HourFormat(this.getActivity()));
+            timePickerDialog.show();
+        });
         addButton.setOnClickListener(v -> {
             String strName = "", strAddress = "", strFoodList = "", strAdditionInformation = "";
             if (name.getText() != null) {
@@ -108,14 +208,14 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
                 Toast.makeText(this.getContext(), "Please enter Additional Information", Toast.LENGTH_LONG).show();
                 return;
             }
-            editSubscription(strName, strAddress, strFoodList, strAdditionInformation, foodDrive.getCalendar(), currentPosition);
+            editSubscription(strName, strAddress, strFoodList, strAdditionInformation, mCalendar[0] + " " + mCalendar[1], currentPosition);
             alertDialog.cancel();
         });
         alertDialog = builderObj.create();
         alertDialog.show();
     }
 
-    private void editSubscription(String strName, String strAddress, String strFoodList, String strAdditionInformation, Calendar calendar, int currentPosition) {
+    private void editSubscription(String strName, String strAddress, String strFoodList, String strAdditionInformation, String calendar, int currentPosition) {
         FoodDrive foodDrive = new FoodDrive();
         foodDrive.setName(strName);
         foodDrive.setAddress(strAddress);

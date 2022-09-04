@@ -38,19 +38,14 @@
         android:maxLength="1000"
         android:hint="Enter Food List" />
 
-    <DatePicker
-        android:id="@+id/date_picker"
+    <Button
+        android:id="@+id/chooseDate"
         android:layout_width="match_parent"
-        android:calendarViewShown="true"
-        android:spinnersShown="false"
-        android:layout_weight="4"
-        android:layout_height="0dp" />
-
-    <TimePicker
-        android:id="@+id/time_picker"
-        android:layout_weight="4"
-        android:layout_width="match_parent"
-        android:layout_height="0dp" />
+        android:text="Choose A Date and Time"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@color/white"
+        android:layout_margin="10sp"
+        android:layout_height="wrap_content"/>
 
 
     <EditText
@@ -59,7 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
         android:maxLength="1000"
-        android:hint="Additional Information" />
+        android:hint="Contact Information" />
 
     <Button
         android:id="@+id/addButton"

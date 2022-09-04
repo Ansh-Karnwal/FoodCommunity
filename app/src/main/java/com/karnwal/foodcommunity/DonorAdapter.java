@@ -42,7 +42,7 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
         holder.nameTxt.setText(dataObj.getName());
         holder.addressTxt.setText(dataObj.getAddress());
         holder.foodListTxt.setText(dataObj.getFoodList());
-        holder.dateTxt.setText(dataObj.getDate());
+        holder.dateTxt.setText(dataObj.getCalendar());
         holder.additionalInformationTxt.setText(dataObj.getAdditionalInformation());
         holder.imgDelete.setOnClickListener(v -> {
             listData.remove(position);
