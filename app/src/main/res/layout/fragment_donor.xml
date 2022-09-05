@@ -32,4 +32,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+
+    <ImageButton
+        android:id="@+id/refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="10dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/sync_48px" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

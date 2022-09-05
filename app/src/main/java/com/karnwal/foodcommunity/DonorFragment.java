@@ -47,73 +47,78 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
     private ArrayList<FoodDrive> donorArrayList = new ArrayList<>();
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
     private DatabaseReference reference;
+    private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private UUID uuid = new UUID(8, 8);
+    private String zipcode;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        executor.execute(() -> {
-            for(;;) {
-                try {
-                    reference = FirebaseDatabase.getInstance().getReference().child(MainActivity.zipcode);
-                    if (MainActivity.zipcode != null) {
-                        break;
-                    }
-                }
-                catch (Exception ignored) {
-                    Log.e("Error : ", "" + ignored.getMessage());
-                }
+        userReference.child(Constants.ZIPCODE).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                zipcode = snapshot.getValue(String.class);
+                reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
             }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
         binding = FragmentDonorBinding.inflate(inflater, container, false);
         binding.foodDriveRecycler.setHasFixedSize(true);
         binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
-        loadData();
+        executor.execute(() -> {
+            for(;;) {
+                if(reference != null) {
+                    loadData();
+                    break;
+                }
+            }
+        });
         binding.addButton.setOnClickListener(v -> {
             DonorDialogFragment dialog = new DonorDialogFragment();
             dialog.setTargetFragment(DonorFragment.this, 1);
             dialog.show(getFragmentManager(), "Dialog");
         });
+        binding.refresh.setOnClickListener(v -> {
+            refreshData();
+        });
         return binding.getRoot();
     }
 
     private void loadData() {
-//        executor.execute(() -> {
-//            reference.addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                    GenericTypeIndicator<HashMap<String, FoodDrive>> genericTypeIndicator = new GenericTypeIndicator<HashMap<String, FoodDrive>>() {};
-//                    HashMap<String, FoodDrive> foodDrives = snapshot.getValue(genericTypeIndicator);
-//                    if(foodDrives != null)
-//                        donorArrayList = new ArrayList<>(foodDrives.values());
-//                }
-//
-//                @Override
-//                public void onCancelled(@NonNull DatabaseError error) {
-//                    Log.e("Error: ", "" + error);
-//                }
-//            });
-//        });
-        executor.execute(() -> {
-            reference.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
-                    }
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    reference.removeEventListener(this);
                 }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
+                adapter.notifyDataSetChanged();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
-        new Handler().postDelayed(() -> {
-            adapter.notifyDataSetChanged();
-        }, 1000);
+    }
+
+    private void refreshData() {
+        donorArrayList = new ArrayList<>();
+        adapter.notifyDataSetChanged();
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    reference.removeEventListener(this);
+                }
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 
     @Override
@@ -128,8 +133,12 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         foodDrive.setFoodList(foodList);
         foodDrive.setAdditionalInformation(additionalInformation);
         foodDrive.setCalendar(calendar);
-        executor.execute(() -> reference.child(String.valueOf(UUID.randomUUID())).setValue(foodDrive));
-        donorArrayList.add(foodDrive);
+//        reference.child(uuid).setValue(foodDrive);
+//        reference.child(uuid).child(Constants.UUID).setValue(uuid);
+        reference.child(String.valueOf(UUID.randomUUID())).setValue(foodDrive);
+        if (donorArrayList.size() >= 1) {
+            donorArrayList.add(foodDrive);
+        }
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
     }
@@ -208,14 +217,14 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
                 Toast.makeText(this.getContext(), "Please enter Additional Information", Toast.LENGTH_LONG).show();
                 return;
             }
-            editSubscription(strName, strAddress, strFoodList, strAdditionInformation, mCalendar[0] + " " + mCalendar[1], currentPosition);
+            editFoodDrive(strName, strAddress, strFoodList, strAdditionInformation, mCalendar[0] + " " + mCalendar[1], currentPosition);
             alertDialog.cancel();
         });
         alertDialog = builderObj.create();
         alertDialog.show();
     }
 
-    private void editSubscription(String strName, String strAddress, String strFoodList, String strAdditionInformation, String calendar, int currentPosition) {
+    private void editFoodDrive(String strName, String strAddress, String strFoodList, String strAdditionInformation, String calendar, int currentPosition) {
         FoodDrive foodDrive = new FoodDrive();
         foodDrive.setName(strName);
         foodDrive.setAddress(strAddress);

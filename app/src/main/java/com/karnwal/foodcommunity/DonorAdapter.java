@@ -1,6 +1,7 @@
 package com.karnwal.foodcommunity;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +46,8 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
         holder.dateTxt.setText(dataObj.getCalendar());
         holder.additionalInformationTxt.setText(dataObj.getAdditionalInformation());
         holder.imgDelete.setOnClickListener(v -> {
-            listData.remove(position);
+            FoodDrive foodDrive = listData.remove(position);
+            Log.e("food drvie ::: ", " " + foodDrive);
             notifyDataSetChanged();
         });
         holder.imgEdit.setOnClickListener(v -> {
