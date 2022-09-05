@@ -30,6 +30,9 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.karnwal.foodcommunity.databinding.FragmentDonorBinding;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -49,7 +52,6 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
     private DatabaseReference reference;
     private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private UUID uuid = new UUID(8, 8);
     private String zipcode;
 
     @Override
@@ -57,8 +59,13 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         userReference.child(Constants.ZIPCODE).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                zipcode = snapshot.getValue(String.class);
-                reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
+                try {
+                    zipcode = snapshot.getValue(String.class);
+                    reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
+                }
+                catch (Exception exception) {
+                    Log.e("Exception ", "" + exception.getMessage());
+                }
             }
 
             @Override
@@ -89,12 +96,11 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
     }
 
     private void loadData() {
-        reference.addValueEventListener(new ValueEventListener() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
-                    reference.removeEventListener(this);
                 }
                 adapter.notifyDataSetChanged();
             }
@@ -105,13 +111,11 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
 
     private void refreshData() {
         donorArrayList = new ArrayList<>();
-        adapter.notifyDataSetChanged();
-        reference.addValueEventListener(new ValueEventListener() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
-                    reference.removeEventListener(this);
                 }
                 adapter.notifyDataSetChanged();
             }
@@ -133,12 +137,13 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         foodDrive.setFoodList(foodList);
         foodDrive.setAdditionalInformation(additionalInformation);
         foodDrive.setCalendar(calendar);
-//        reference.child(uuid).setValue(foodDrive);
-//        reference.child(uuid).child(Constants.UUID).setValue(uuid);
-        reference.child(String.valueOf(UUID.randomUUID())).setValue(foodDrive);
-        if (donorArrayList.size() >= 1) {
-            donorArrayList.add(foodDrive);
-        }
+        String uuid = String.valueOf(UUID.randomUUID());
+        foodDrive.setUUID(uuid);
+        foodDrive.setOwnerUID(firebaseUser.getUid());
+        reference.child(uuid).setValue(foodDrive);
+        reference.child(uuid).child(Constants.UUID).setValue(uuid);
+        reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());
+        donorArrayList.add(foodDrive);
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
     }
@@ -155,14 +160,16 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         Button editDate = view.findViewById(R.id.editchooseDate);
         name.setText(foodDrive.getName());
         address.setText(foodDrive.getAddress());
-        foodList.setText(foodDrive.getCalendar());
+        foodList.setText(foodDrive.getFoodList());
         additionalInformation.setText(foodDrive.getAdditionalInformation());
         builderObj.setView(view);
-        builderObj.setCancelable(false);
         closeAlert.setOnClickListener(v -> alertDialog.cancel());
         final String[] mCalendar = new String[2];
         editDate.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, dd MMM yyyy hh:mm aa");
+            try {calendar.setTime(simpleDateFormat.parse(foodDrive.getCalendar()));}
+            catch (ParseException ignored) {}
             int YEAR = calendar.get(Calendar.YEAR);
             int MONTH = calendar.get(Calendar.MONTH);
             int DATE = calendar.get(Calendar.DATE);

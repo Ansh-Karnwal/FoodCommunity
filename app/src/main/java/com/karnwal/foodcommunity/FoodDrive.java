@@ -1,11 +1,14 @@
 package com.karnwal.foodcommunity;
 
 public class FoodDrive {
+
     private String name;
     private String address;
     private String foodList;
     private String calendar;
     private String additionalInformation = null;
+    private String UUID;
+    private String ownerUID;
 
     public String getName() {
         return name;
@@ -21,6 +24,14 @@ public class FoodDrive {
 
     public String getCalendar() {
         return calendar;
+    }
+
+    public String getUUID() {
+        return UUID;
+    }
+
+    public void setUUID(String UUID) {
+        this.UUID = UUID;
     }
 
     public String getAdditionalInformation() {
@@ -47,6 +58,14 @@ public class FoodDrive {
         this.additionalInformation = additionalInformation;
     }
 
+    public String getOwnerUID() {
+        return ownerUID;
+    }
+
+    public void setOwnerUID(String ownerUID) {
+        this.ownerUID = ownerUID;
+    }
+
     @Override
     public String toString() {
         return "FoodDrive{" +
@@ -55,6 +74,8 @@ public class FoodDrive {
                 ", foodList='" + foodList + '\'' +
                 ", calendar='" + calendar + '\'' +
                 ", additionalInformation='" + additionalInformation + '\'' +
+                ", UUID='" + UUID + '\'' +
+                ", ownerUID='" + ownerUID + '\'' +
                 '}';
     }
 }

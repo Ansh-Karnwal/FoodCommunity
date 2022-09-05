@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -84,12 +85,27 @@ public class DonorDialogFragment extends DialogFragment {
         });
         binding.addButton.setOnClickListener(v -> {
             String name = mName.getText().toString();
-            String address = mAddress.getText().toString();
-            String foodList = mFoodList.getText().toString();
-            String additionalInformation = mAdditionalInformation.getText().toString();
-            if(!name.equals("")) {
-                mOnInputSelected.sendInput(name, address, foodList, mCalendar[0] + " " + mCalendar[1], additionalInformation);
+            if (name.equals("")) {
+                Toast.makeText(this.getActivity(), "Please Enter Name", Toast.LENGTH_SHORT).show();
+                return;
             }
+            String address = mAddress.getText().toString();
+            if (address.equals("")) {
+                Toast.makeText(this.getActivity(), "Please Enter Address", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String foodList = mFoodList.getText().toString();
+            if (foodList.equals("")) {
+                Toast.makeText(this.getActivity(), "Please Enter Food/s", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String additionalInformation = mAdditionalInformation.getText().toString();
+            String calendar = mCalendar[0] + " " + mCalendar[1];
+            if (calendar.equals("null null")) {
+                Toast.makeText(this.getActivity(), "Please Choose Date And Time", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            mOnInputSelected.sendInput(name, address, foodList, calendar, additionalInformation);
             getDialog().dismiss();
         });
         return binding.getRoot();
