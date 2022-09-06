@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -28,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.karnwal.foodcommunity.databinding.ActivityMainBinding;
 import com.karnwal.foodcommunity.databinding.FragmentDonorBinding;
 
 import java.text.ParseException;
@@ -89,9 +91,9 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
             dialog.setTargetFragment(DonorFragment.this, 1);
             dialog.show(getFragmentManager(), "Dialog");
         });
-        binding.refresh.setOnClickListener(v -> {
-            refreshData();
-        });
+        View mainView = this.getActivity().getLayoutInflater().inflate(R.layout.activity_main, null);
+        ImageButton refresh = mainView.findViewById(R.id.refreshM);
+
         return binding.getRoot();
     }
 

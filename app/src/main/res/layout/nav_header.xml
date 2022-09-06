@@ -9,10 +9,10 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/ic_launcher"
-        android:id="@+id/profilePicture"/>
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:id="@+id/profilePicture"
+        android:src="@drawable/home_48px"/>
 
     <TextView
         android:layout_width="wrap_content"

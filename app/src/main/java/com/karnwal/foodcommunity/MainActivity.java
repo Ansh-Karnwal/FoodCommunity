@@ -2,8 +2,11 @@ package com.karnwal.foodcommunity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -12,23 +15,33 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.fondesa.kpermissions.extension.PermissionsBuilderKt;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -37,10 +50,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.karnwal.foodcommunity.databinding.ActivityMainBinding;
+import com.karnwal.foodcommunity.databinding.NavHeaderBinding;
+import com.squareup.picasso.Picasso;
+
+import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,6 +77,46 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        setSupportActionBar(binding.toolbar);
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        binding.navView.setCheckedItem(R.id.nav_home);
+        binding.navView.setNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.nav_settings:
+                    startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+                    break;
+                case R.id.nav_home:
+                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    break;
+                case R.id.nav_my_donors:
+                    startActivity(new Intent(getApplicationContext(), MyDonorActivity.class));
+                    break;
+                case R.id.nav_my_requests:
+                    // TODO: 9/5/2022 Add Requests
+                    break;
+            }
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this,
+                binding.drawerLayout,
+                binding.toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
+        );
+        binding.drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        View headerLayout = binding.navView.getHeaderView(0);
+        ImageView profilePicture = headerLayout.findViewById(R.id.profilePicture);
+        TextView userName = headerLayout.findViewById(R.id.userName);
+        TextView email = headerLayout.findViewById(R.id.email);
+        try {
+            Picasso.get().load(user.getPhotoUrl()).into(profilePicture);
+        }
+        catch (Exception exception) {}
+        userName.setText(user.getDisplayName());
+        email.setText(user.getEmail());
         binding.bottomNavigationView.setItemBackground(null);
         binding.bottomNavigationView.getMenu().findItem(R.id.placeholder).setEnabled(false);
         binding.bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
@@ -167,6 +227,16 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+        }
+        else {
+            super.onBackPressed();
         }
     }
 }
