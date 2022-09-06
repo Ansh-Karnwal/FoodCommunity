@@ -44,7 +44,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected {
+public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected{
 
     private AlertDialog alertDialog;
     private FragmentDonorBinding binding;
@@ -91,9 +91,9 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
             dialog.setTargetFragment(DonorFragment.this, 1);
             dialog.show(getFragmentManager(), "Dialog");
         });
-        View mainView = this.getActivity().getLayoutInflater().inflate(R.layout.activity_main, null);
-        ImageButton refresh = mainView.findViewById(R.id.refreshM);
-
+        binding.refresh.setOnClickListener(v -> {
+            refreshData();
+        });
         return binding.getRoot();
     }
 
