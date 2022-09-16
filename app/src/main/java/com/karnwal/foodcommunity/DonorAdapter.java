@@ -32,6 +32,7 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
     private DatabaseReference reference;
     private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
     private String zipcode;
+//    private boolean isDeleteClicked;
 
     public DonorAdapter(Context context, ArrayList<FoodDrive> listData, OnEditListener onEditListener) {
         this.context = context;
@@ -91,12 +92,21 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
         holder.imgDelete.setOnClickListener(v -> {
             FoodDrive foodDrive = listData.remove(position);
             reference.child(foodDrive.getUUID()).removeValue();
+//            isDeleteClicked = true;
             notifyDataSetChanged();
         });
         holder.imgEdit.setOnClickListener(v -> {
             onEditListener.onEditClick(listData.get(position), position);
         });
     }
+
+//    protected Boolean getDeleteStatus() {
+//        if (isDeleteClicked) {
+//            isDeleteClicked = false;
+//            return true;
+//        }
+//        return false;
+//    }
 
     @Override
     public int getItemCount() {

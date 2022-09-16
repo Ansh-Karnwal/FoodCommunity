@@ -9,6 +9,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -57,8 +58,10 @@ import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -71,6 +74,9 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDataBase = FirebaseDatabase.getInstance().getReference();
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     protected static String zipcode;
+    private boolean isRefreshClicked;
+    private ArrayList<FoodDrive> dataList;
+    private Executor executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,16 +86,27 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         binding.navView.setCheckedItem(R.id.nav_home);
+        Bundle extras = new Bundle();
+        executor.execute(() -> {
+            for (;;) {
+                if (zipcode != null) {
+                    extras.putString("databaseReference", "" + mDataBase.child(zipcode));
+                    break;
+                }
+            }
+        });
+
         binding.navView.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.nav_settings:
-                    startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
-                    break;
-                case R.id.nav_home:
-                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    Intent settingsIntent = new Intent(getApplicationContext(), ProfileActivity.class);
+                    settingsIntent.putExtras(extras);
+                    startActivity(settingsIntent);
                     break;
                 case R.id.nav_my_donors:
-                    startActivity(new Intent(getApplicationContext(), MyDonorActivity.class));
+                    Intent myDonorIntent = new Intent(getApplicationContext(), MyDonorActivity.class);
+                    myDonorIntent.putExtras(extras);
+                    startActivity(myDonorIntent);
                     break;
                 case R.id.nav_my_requests:
                     // TODO: 9/5/2022 Add Requests
@@ -133,6 +150,9 @@ public class MainActivity extends AppCompatActivity {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         } catch (Exception ignored) {
         }
+        binding.refreshM.setOnClickListener(v -> {
+            isRefreshClicked = true;
+        });
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = (BottomNavigationView.OnNavigationItemSelectedListener) item -> {
@@ -151,6 +171,14 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception ignored) {}
         return true;
     };
+
+    protected Boolean getRefreshStatus() {
+        if (isRefreshClicked) {
+            isRefreshClicked = false;
+            return true;
+        }
+        return false;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -239,4 +267,10 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
+
+//    @Override
+//    public void onDataPass(ArrayList<FoodDrive> data) {
+//        dataList = new ArrayList<>(data);
+//    }
 }

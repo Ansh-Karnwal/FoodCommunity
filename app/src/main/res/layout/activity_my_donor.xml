@@ -9,13 +9,26 @@
     android:fitsSystemWindows="true"
     tools:context=".MyDonorActivity">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MyDonorActivity">
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/foodDriveRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="150dp" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="650dp"
+            android:textSize="32dp"
+            android:textColor="@color/purple_500"
+            android:text="Your Contributions" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <LinearLayout

@@ -40,16 +40,16 @@ public class ProfileActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         binding.navView.setCheckedItem(R.id.nav_settings);
+        Bundle extras = getIntent().getExtras();
         binding.navView.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
-                case R.id.nav_settings:
-                    startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
-                    break;
                 case R.id.nav_home:
                     startActivity(new Intent(getApplicationContext(), MainActivity.class));
                     break;
                 case R.id.nav_my_donors:
-                    startActivity(new Intent(getApplicationContext(), MyDonorActivity.class));
+                    Intent myDonorIntent = new Intent(getApplicationContext(), MyDonorActivity.class);
+                    myDonorIntent.putExtras(extras);
+                    startActivity(myDonorIntent);
                     break;
                 case R.id.nav_my_requests:
                     // TODO: 9/5/2022 Add Requests

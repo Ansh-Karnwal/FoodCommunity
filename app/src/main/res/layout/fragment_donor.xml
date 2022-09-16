@@ -33,14 +33,30 @@
         android:layout_height="match_parent"
         android:layout_marginTop="65dp"/>
 
+<!--    <Button-->
+<!--        android:id="@+id/refresh"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Button"-->
+<!--        android:layout_gravity="top|right"/>-->
 
-    <ImageButton
-        android:id="@+id/refresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="10dp"
-        android:background="@android:color/transparent"
-        android:src="@drawable/sync_48px" />
+
+    <!--    <ImageButton-->
+<!--        android:id="@+id/refresh"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_gravity="bottom"-->
+<!--        android:layout_marginBottom="10dp"-->
+<!--        android:background="@android:color/transparent"-->
+<!--        android:src="@drawable/sync_48px" />-->
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/refresh"-->
+<!--        android:layout_width="100dp"-->
+<!--        android:layout_height="100dp"-->
+<!--        android:layout_gravity="top|right"-->
+<!--        android:layout_marginBottom="10dp"-->
+<!--        android:background="@color/purple_500"-->
+<!--        android:src="@drawable/sync_48px_black" />-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

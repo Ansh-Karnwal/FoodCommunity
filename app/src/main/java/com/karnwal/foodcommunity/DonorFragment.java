@@ -1,8 +1,10 @@
 package com.karnwal.foodcommunity;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -39,12 +41,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected{
+public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected {
 
     private AlertDialog alertDialog;
     private FragmentDonorBinding binding;
@@ -53,26 +55,23 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
     private DatabaseReference reference;
     private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Executor executor = Executors.newFixedThreadPool(2);
     private String zipcode;
+//    private OnDataPass dataPasser;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        userReference.child(Constants.ZIPCODE).addValueEventListener(new ValueEventListener() {
+        userReference.child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                try {
-                    zipcode = snapshot.getValue(String.class);
-                    reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
-                }
-                catch (Exception exception) {
-                    Log.e("Exception ", "" + exception.getMessage());
-                }
+                zipcode = snapshot.getValue(String.class);
+                reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+
         binding = FragmentDonorBinding.inflate(inflater, container, false);
         binding.foodDriveRecycler.setHasFixedSize(true);
         binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
@@ -80,48 +79,76 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         binding.foodDriveRecycler.setAdapter(adapter);
         executor.execute(() -> {
             for(;;) {
+                // TODO: 9/10/2022 Find Better Solution for loadData()
+                loadData();
                 if(reference != null) {
                     loadData();
                     break;
                 }
             }
         });
+//        executor.execute(() -> {
+//            for (;;) {
+//                try {
+//                    boolean ifClicked = ((MainActivity) requireActivity()).getRefreshStatus();
+//                    if (ifClicked) {
+//                        refreshData();
+//                    }
+//                }
+//                catch (Exception exception) {}
+//            }
+//        });
+//        executor.execute(() -> {
+//            for (;;) {
+//                try {
+//                    boolean ifClicked = adapter.getDeleteStatus();
+//                    if (ifClicked) {
+//                        passData();
+//                    }
+//                }
+//                catch (Exception exception) {}
+//            }
+//        });
         binding.addButton.setOnClickListener(v -> {
             DonorDialogFragment dialog = new DonorDialogFragment();
             dialog.setTargetFragment(DonorFragment.this, 1);
             dialog.show(getFragmentManager(), "Dialog");
         });
-        binding.refresh.setOnClickListener(v -> {
-            refreshData();
-        });
+//        binding.refresh.setOnClickListener(v -> {
+//            refreshData();
+//        });
         return binding.getRoot();
     }
 
     private void loadData() {
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+        try {
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    }
+//                    passData();
+                    adapter.notifyDataSetChanged();
                 }
-                adapter.notifyDataSetChanged();
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+        }
+        catch (Exception ignored) {}
     }
 
     private void refreshData() {
-        donorArrayList = new ArrayList<>();
+        donorArrayList.clear();
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
                 }
+//                passData();
                 adapter.notifyDataSetChanged();
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
@@ -146,6 +173,7 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         reference.child(uuid).child(Constants.UUID).setValue(uuid);
         reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());
         donorArrayList.add(foodDrive);
+//        passData();
         adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
     }
@@ -241,5 +269,25 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         foodDrive.setAdditionalInformation(strAdditionInformation);
         foodDrive.setCalendar(calendar);
         adapter.editData(foodDrive, currentPosition);
+//        passData();
+    }
+
+//    public void passData() {
+//        dataPasser.onDataPass(donorArrayList);
+//    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+//        dataPasser = (OnDataPass) context;
+    }
+
+//    public interface OnDataPass {
+//        void onDataPass(ArrayList<FoodDrive> data);
+//    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
     }
 }
