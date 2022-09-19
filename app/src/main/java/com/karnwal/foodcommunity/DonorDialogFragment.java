@@ -53,13 +53,13 @@ public class DonorDialogFragment extends DialogFragment {
         binding.closeAlert.setOnClickListener(v -> {
             getDialog().dismiss();
         });
-        final String[] mCalendar = new String[2];
+        final String[] mCalendar = new String[3];
         binding.chooseDate.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
             int YEAR = calendar.get(Calendar.YEAR);
             int MONTH = calendar.get(Calendar.MONTH);
             int DATE = calendar.get(Calendar.DATE);
-            int HOUR = calendar.get(Calendar.HOUR);
+            int HOUR = calendar.get(Calendar.HOUR_OF_DAY);
             int MINUTE = calendar.get(Calendar.MINUTE);
             DatePickerDialog datePickerDialog = new DatePickerDialog(this.getActivity(), (view, year, month, date) -> {
                 Calendar currentCalendar = Calendar.getInstance();
@@ -67,7 +67,12 @@ public class DonorDialogFragment extends DialogFragment {
                 currentCalendar.set(Calendar.MONTH, month);
                 currentCalendar.set(Calendar.DATE, date);
                 mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", currentCalendar)).toString();
-                binding.chooseDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
+                if (mCalendar[1] == null) mCalendar[1] = (DateFormat.format("hh:mm", calendar)).toString();
+                if (mCalendar[2] == null) {
+                    if (HOUR >= 12) mCalendar[2] = "PM";
+                    else mCalendar[2] = "AM";
+                }
+                binding.chooseDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2]);
             }, YEAR, MONTH, DATE);
             datePickerDialog.setCancelable(false);
             datePickerDialog.show();
@@ -77,9 +82,14 @@ public class DonorDialogFragment extends DialogFragment {
                     Calendar currentCalendar = Calendar.getInstance();
                     currentCalendar.set(Calendar.HOUR, hour);
                     currentCalendar.set(Calendar.MINUTE, minute);
-                    mCalendar[1] = (DateFormat.format("hh:mm aa", currentCalendar)).toString();
-                    binding.chooseDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
-                }, HOUR, MINUTE, DateFormat.is24HourFormat(this.getActivity()));
+                    if (hour >= 12) mCalendar[2] = "PM";
+                    else mCalendar[2] = "AM";
+                    mCalendar[1] = (DateFormat.format("hh:mm", currentCalendar)).toString();
+                    if (mCalendar[0] == null)
+                        mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", calendar)).toString();
+                    binding.chooseDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2]);
+                }, HOUR, MINUTE, false);
+                timePickerDialog.setCancelable(false);
                 timePickerDialog.show();
             }, 5);
         });
@@ -100,8 +110,8 @@ public class DonorDialogFragment extends DialogFragment {
                 return;
             }
             String additionalInformation = mAdditionalInformation.getText().toString();
-            String calendar = mCalendar[0] + " " + mCalendar[1];
-            if (calendar.equals("null null")) {
+            String calendar = mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2];
+            if (calendar.equals("null null null")) {
                 Toast.makeText(this.getActivity(), "Please Choose Date And Time", Toast.LENGTH_SHORT).show();
                 return;
             }

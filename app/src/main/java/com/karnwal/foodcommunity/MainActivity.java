@@ -7,42 +7,31 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
-import com.fondesa.kpermissions.extension.PermissionsBuilderKt;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -51,19 +40,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.karnwal.foodcommunity.databinding.ActivityMainBinding;
-import com.karnwal.foodcommunity.databinding.NavHeaderBinding;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,9 +54,25 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDataBase = FirebaseDatabase.getInstance().getReference();
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     protected static String zipcode;
-    private boolean isRefreshClicked;
-    private ArrayList<FoodDrive> dataList;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    protected ImageButton refreshReceiver;
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Dialog dialog = new Dialog(context);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setCancelable(false);
+            dialog.setContentView(R.layout.no_wifi_dialog);
+            Button retryButton = dialog.findViewById(R.id.retryButton);
+            if (!MainActivity.haveNetworkConnection(context)) {
+                dialog.show();
+            }
+            retryButton.setOnClickListener(v -> {
+                if (MainActivity.haveNetworkConnection(context)) {
+                    dialog.dismiss();
+                }
+            });
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,29 +82,29 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         binding.navView.setCheckedItem(R.id.nav_home);
-        Bundle extras = new Bundle();
-        executor.execute(() -> {
-            for (;;) {
-                if (zipcode != null) {
-                    extras.putString("databaseReference", "" + mDataBase.child(zipcode));
-                    break;
-                }
-            }
-        });
-
+//        if (!haveNetworkConnection()) {
+//            Dialog dialog = new Dialog(MainActivity.this);
+//            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//            dialog.setCancelable(false);
+//            dialog.setContentView(R.layout.no_wifi_dialog);
+//            dialog.show();
+//        }
         binding.navView.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
+                case R.id.nav_home:
+                    binding.refreshM.setVisibility(View.VISIBLE);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new DonorFragment()).commit();
+                    break;
                 case R.id.nav_settings:
-                    Intent settingsIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-                    settingsIntent.putExtras(extras);
-                    startActivity(settingsIntent);
+                    binding.refreshM.setVisibility(View.GONE);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new ProfileFragment()).commit();
                     break;
                 case R.id.nav_my_donors:
-                    Intent myDonorIntent = new Intent(getApplicationContext(), MyDonorActivity.class);
-                    myDonorIntent.putExtras(extras);
-                    startActivity(myDonorIntent);
+                    binding.refreshM.setVisibility(View.GONE);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new MyDonorFragment()).commit();
                     break;
                 case R.id.nav_my_requests:
+                    binding.refreshM.setVisibility(View.GONE);
                     // TODO: 9/5/2022 Add Requests
                     break;
             }
@@ -134,13 +130,6 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception exception) {}
         userName.setText(user.getDisplayName());
         email.setText(user.getEmail());
-        binding.bottomNavigationView.setItemBackground(null);
-        binding.bottomNavigationView.getMenu().findItem(R.id.placeholder).setEnabled(false);
-        binding.bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
-        binding.settings.setOnClickListener(v -> {
-            Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
-            startActivity(intent);
-        });
         LocationManager locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
@@ -150,34 +139,13 @@ public class MainActivity extends AppCompatActivity {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         } catch (Exception ignored) {
         }
-        binding.refreshM.setOnClickListener(v -> {
-            isRefreshClicked = true;
-        });
+        refreshReceiver = binding.refreshM;
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = (BottomNavigationView.OnNavigationItemSelectedListener) item -> {
-        Fragment selectedFragment = null;
-        switch (item.getItemId()) {
-            case R.id.Donor:
-                selectedFragment = new DonorFragment();
-                break;
-            case R.id.Recipient:
-                selectedFragment = new RecipientFragment();
-                break;
-        }
-        try {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment, selectedFragment).commit();
-        }
-        catch (Exception ignored) {}
-        return true;
-    };
-
-    protected Boolean getRefreshStatus() {
-        if (isRefreshClicked) {
-            isRefreshClicked = false;
-            return true;
-        }
-        return false;
+    public Bundle getExtras() {
+        Bundle bundle = new Bundle();
+        bundle.putString("databaseReference", "" + mDataBase.child(zipcode));
+        return bundle;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -268,9 +236,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected static boolean haveNetworkConnection(Context context) {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
+    }
 
-//    @Override
-//    public void onDataPass(ArrayList<FoodDrive> data) {
-//        dataList = new ArrayList<>(data);
-//    }
+    @Override
+    protected void onStart() {
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(broadcastReceiver, filter);
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        unregisterReceiver(broadcastReceiver);
+        super.onStop();
+    }
 }

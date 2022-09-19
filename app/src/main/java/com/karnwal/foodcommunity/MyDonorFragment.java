@@ -1,25 +1,23 @@
 package com.karnwal.foodcommunity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import android.os.Handler;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,21 +27,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.karnwal.foodcommunity.databinding.ActivityMyDonorBinding;
-import com.squareup.picasso.Picasso;
+import com.karnwal.foodcommunity.databinding.FragmentDonorBinding;
+import com.karnwal.foodcommunity.databinding.FragmentMyDonorBinding;
 
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.UUID;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MyDonorActivity extends AppCompatActivity {
+public class MyDonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected {
 
-    private ActivityMyDonorBinding binding;
+    private FragmentMyDonorBinding binding;
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     private ArrayList<FoodDrive> donorArrayList = new ArrayList<>();
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -54,59 +51,24 @@ public class MyDonorActivity extends AppCompatActivity {
     private AlertDialog alertDialog;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityMyDonorBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        setSupportActionBar(binding.toolbar);
-        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        binding.navView.setCheckedItem(R.id.nav_my_donors);
-        Bundle extras = getIntent().getExtras();
-        binding.navView.setNavigationItemSelectedListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.nav_settings:
-                    Intent settingsIntent = new Intent(getApplicationContext(), ProfileActivity.class);
-                    settingsIntent.putExtras(extras);
-                    startActivity(settingsIntent);
-                    break;
-                case R.id.nav_home:
-                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                    break;
-                case R.id.nav_my_requests:
-                    // TODO: 9/5/2022 Add Requests
-                    break;
-            }
-            binding.drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-        });
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this,
-                binding.drawerLayout,
-                binding.toolbar,
-                R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close
-        );
-
-        binding.drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        View headerLayout = binding.navView.getHeaderView(0);
-        ImageView profilePicture = headerLayout.findViewById(R.id.profilePicture);
-        TextView userName = headerLayout.findViewById(R.id.userName);
-        TextView email = headerLayout.findViewById(R.id.email);
-        try {
-            Picasso.get().load(user.getPhotoUrl()).into(profilePicture);
-        }
-        catch (Exception exception) {}
-        userName.setText(user.getDisplayName());
-        email.setText(user.getEmail());
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentMyDonorBinding.inflate(inflater, container, false);
+        Bundle extras = ((MainActivity) getActivity()).getExtras();
         if (extras != null) {
             reference = FirebaseDatabase.getInstance().getReferenceFromUrl(extras.getString("databaseReference"));
             getUserDonors();
+
         }
         binding.foodDriveRecycler.setHasFixedSize(true);
-        binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false));
-        adapter = new DonorAdapter(getApplicationContext(), donorArrayList, this::editOnClick);
+        binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
+        adapter = new DonorAdapter(this.getActivity(), donorArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
+        binding.addButtonRedirect.setOnClickListener(v -> {
+            DonorDialogFragment dialog = new DonorDialogFragment();
+            dialog.setTargetFragment(MyDonorFragment.this, 1);
+            dialog.show(getFragmentManager(), "Dialog");
+        });
+        return binding.getRoot();
     }
 
     private void getUserDonors() {
@@ -118,6 +80,8 @@ public class MyDonorActivity extends AppCompatActivity {
                         donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
                     }
                 }
+                if (donorArrayList.size() == 0)
+                    binding.textView3.setText("No Contributions");
                 adapter.notifyDataSetChanged();
             }
 
@@ -127,7 +91,7 @@ public class MyDonorActivity extends AppCompatActivity {
     }
 
     private void editOnClick(FoodDrive foodDrive, int currentPosition) {
-        View view = LayoutInflater.from(this).inflate(R.layout.edit_donor, null);
+        View view = LayoutInflater.from(this.getContext()).inflate(R.layout.edit_donor, null);
         AlertDialog.Builder builderObj = new AlertDialog.Builder(view.getContext());
         EditText name = view.findViewById(R.id.editname);
         EditText address = view.findViewById(R.id.editaddress);
@@ -140,9 +104,10 @@ public class MyDonorActivity extends AppCompatActivity {
         address.setText(foodDrive.getAddress());
         foodList.setText(foodDrive.getFoodList());
         additionalInformation.setText(foodDrive.getAdditionalInformation());
+        editDate.setText("Chosen Date: " + foodDrive.getCalendar());
         builderObj.setView(view);
         closeAlert.setOnClickListener(v -> alertDialog.cancel());
-        final String[] mCalendar = new String[2];
+        final String[] mCalendar = new String[3];
         editDate.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, dd MMM yyyy hh:mm aa");
@@ -151,58 +116,81 @@ public class MyDonorActivity extends AppCompatActivity {
             int YEAR = calendar.get(Calendar.YEAR);
             int MONTH = calendar.get(Calendar.MONTH);
             int DATE = calendar.get(Calendar.DATE);
-            int HOUR = calendar.get(Calendar.HOUR);
+            int HOUR = calendar.get(Calendar.HOUR_OF_DAY);
             int MINUTE = calendar.get(Calendar.MINUTE);
-            DatePickerDialog datePickerDialog = new DatePickerDialog(getApplicationContext(), (view1, year, month, date) -> {
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this.getActivity(), (view1, year, month, date) -> {
                 Calendar currentCalendar = Calendar.getInstance();
                 currentCalendar.set(Calendar.YEAR, year);
                 currentCalendar.set(Calendar.MONTH, month);
                 currentCalendar.set(Calendar.DATE, date);
                 mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", currentCalendar)).toString();
-                editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
+                if (mCalendar[1] == null) mCalendar[1] = (DateFormat.format("hh:mm", calendar)).toString();
+                if (mCalendar[2] == null) {
+                    if (HOUR >= 12) mCalendar[2] = "PM";
+                    else mCalendar[2] = "AM";
+                }
+                editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2]);
             }, YEAR, MONTH, DATE);
             datePickerDialog.setCancelable(false);
             datePickerDialog.show();
-            TimePickerDialog timePickerDialog = new TimePickerDialog(getApplicationContext(), (view1, hour, minute) -> {
-                Calendar currentCalendar = Calendar.getInstance();
-                currentCalendar.set(Calendar.HOUR, hour);
-                currentCalendar.set(Calendar.MINUTE, minute);
-                mCalendar[1] = (DateFormat.format("hh:mm aa", currentCalendar)).toString();
-                editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1]);
-            }, HOUR, MINUTE, DateFormat.is24HourFormat(getApplicationContext()));
-            timePickerDialog.show();
+            final Handler handler = new Handler();
+            handler.postDelayed(() -> {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(this.getActivity(), (view1, hour, minute) -> {
+                    Calendar currentCalendar = Calendar.getInstance();
+                    currentCalendar.set(Calendar.HOUR, hour);
+                    currentCalendar.set(Calendar.MINUTE, minute);
+                    if (hour >= 12) mCalendar[2] = "PM";
+                    else mCalendar[2] = "AM";
+                    mCalendar[1] = (DateFormat.format("hh:mm", currentCalendar)).toString();
+                    if (mCalendar[0] == null)
+                        mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", calendar)).toString();
+                    editDate.setText("Chosen Date: " + mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2]);
+                }, HOUR, MINUTE, DateFormat.is24HourFormat(this.getActivity()));
+                timePickerDialog.setCancelable(false);
+                timePickerDialog.show();
+            }, 5);
         });
+        if (mCalendar[0] == null || mCalendar[1] == null || mCalendar[3] == null) {
+            Calendar calendar = Calendar.getInstance();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, dd MMM yyyy hh:mm aa");
+            try {calendar.setTime(simpleDateFormat.parse(foodDrive.getCalendar()));}
+            catch (ParseException ignored) {}
+            mCalendar[0] = (DateFormat.format("E, dd MMM yyyy", calendar)).toString();
+            mCalendar[1] = (DateFormat.format("hh:mm", calendar)).toString();
+            if (calendar.get(Calendar.HOUR_OF_DAY) >= 12) mCalendar[2] = "PM";
+            else mCalendar[2] = "AM";
+        }
         addButton.setOnClickListener(v -> {
             String strName = "", strAddress = "", strFoodList = "", strAdditionInformation = "";
             if (name.getText() != null) {
                 strName = name.getText().toString();
             }
             if (strName.equals("")) {
-                Toast.makeText(getApplicationContext(), "Please enter Food Drive Name", Toast.LENGTH_LONG).show();
+                Toast.makeText(this.getContext(), "Please enter Food Drive Name", Toast.LENGTH_LONG).show();
                 return;
             }
             if (address.getText() != null) {
                 strAddress = address.getText().toString();
             }
             if (strAddress.equals("")) {
-                Toast.makeText(getApplicationContext(), "Please enter Address", Toast.LENGTH_LONG).show();
+                Toast.makeText(this.getContext(), "Please enter Address", Toast.LENGTH_LONG).show();
                 return;
             }
             if (foodList.getText() != null) {
                 strFoodList = foodList.getText().toString();
             }
             if (strFoodList.equals("")) {
-                Toast.makeText(getApplicationContext(), "Please enter Foods", Toast.LENGTH_LONG).show();
+                Toast.makeText(this.getContext(), "Please enter Foods", Toast.LENGTH_LONG).show();
                 return;
             }
             if (additionalInformation.getText() != null) {
                 strAdditionInformation = additionalInformation.getText().toString();
             }
             if (strAdditionInformation.equals("")) {
-                Toast.makeText(getApplicationContext(), "Please enter Additional Information", Toast.LENGTH_LONG).show();
+                Toast.makeText(this.getContext(), "Please enter Additional Information", Toast.LENGTH_LONG).show();
                 return;
             }
-            editFoodDrive(strName, strAddress, strFoodList, strAdditionInformation, mCalendar[0] + " " + mCalendar[1], currentPosition);
+            editFoodDrive(strName, strAddress, strFoodList, strAdditionInformation, mCalendar[0] + " " + mCalendar[1] + " " + mCalendar[2], currentPosition);
             alertDialog.cancel();
         });
         alertDialog = builderObj.create();
@@ -218,5 +206,29 @@ public class MyDonorActivity extends AppCompatActivity {
         foodDrive.setCalendar(calendar);
         adapter.editData(foodDrive, currentPosition);
 //        passData();
+    }
+
+    @Override
+    public void sendInput(String name, String address, String foodList, String calendar, String additionalInformation) {
+        addFoodDrive(name, address, foodList, calendar, additionalInformation);
+    }
+
+    private void addFoodDrive(String name, String address, String foodList, String calendar, String additionalInformation) {
+        binding.textView3.setText("Your Contributions");
+        FoodDrive foodDrive = new FoodDrive();
+        foodDrive.setName(name);
+        foodDrive.setAddress(address);
+        foodDrive.setFoodList(foodList);
+        foodDrive.setAdditionalInformation(additionalInformation);
+        foodDrive.setCalendar(calendar);
+        String uuid = String.valueOf(UUID.randomUUID());
+        foodDrive.setUUID(uuid);
+        foodDrive.setOwnerUID(firebaseUser.getUid());
+        reference.child(uuid).setValue(foodDrive);
+        reference.child(uuid).child(Constants.UUID).setValue(uuid);
+        reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());
+        donorArrayList.add(foodDrive);
+        adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
+        binding.foodDriveRecycler.setAdapter(adapter);
     }
 }

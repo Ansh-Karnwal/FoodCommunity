@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#272727"
+    tools:context=".MyDonorFragment">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/foodDriveRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="130dp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="65dp"
+        android:layout_gravity="center|top"
+        android:layout_height="wrap_content"
+        android:textSize="32dp"
+        android:textColor="@color/purple_500"
+        android:text="Your Contributions" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addButtonRedirect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/ic_baseline_add_24"
+        android:backgroundTint="@color/purple_500"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="30dp"
+        android:layout_gravity="bottom|right"/>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

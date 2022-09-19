@@ -59,7 +59,7 @@
     <Button
         android:id="@+id/editButton"
         android:layout_width="match_parent"
-        android:text="Add Food Drive"
+        android:text="Edit Food Drive"
         android:backgroundTint="@color/purple_500"
         android:textColor="@color/white"
         android:layout_margin="10sp"
