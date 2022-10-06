@@ -23,6 +23,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -142,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         refreshReceiver = binding.refreshM;
     }
 
-    public Bundle getExtras() {
+    protected Bundle getExtras() {
         Bundle bundle = new Bundle();
         bundle.putString("databaseReference", "" + mDataBase.child(zipcode));
         return bundle;
@@ -199,8 +200,15 @@ public class MainActivity extends AppCompatActivity {
         dialog.setContentView(R.layout.zipcode_dialog);
         EditText editText = dialog.findViewById(R.id.zipcodeText);
         Button submitButton = dialog.findViewById(R.id.submit);
+        final String[] tempCode = new String[1];
         submitButton.setOnClickListener(v ->{
             mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue("" + editText.getText());
+            tempCode[0] = "" + editText.getText();
+            zipcode = tempCode[0];
+            if (("" + editText.getText()).equals("")) {
+                Toast.makeText(MainActivity.this, "Please Enter a Zip Code", Toast.LENGTH_SHORT).show();
+                return;
+            }
             dialog.dismiss();
         });
         dialog.show();
@@ -221,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
             zipcode = address.getPostalCode();
             mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue(address.getPostalCode());
         }
-        catch (IOException e) {
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -250,6 +258,10 @@ public class MainActivity extends AppCompatActivity {
                     haveConnectedMobile = true;
         }
         return haveConnectedWifi || haveConnectedMobile;
+    }
+
+    protected static String getZipcode() {
+        return zipcode;
     }
 
     @Override

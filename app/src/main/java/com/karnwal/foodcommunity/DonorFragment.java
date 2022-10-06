@@ -59,18 +59,51 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
     private Executor executor = Executors.newFixedThreadPool(2);
     private String zipcode;
 
+//    @Override
+//    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+//        userReference.child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                try {
+//                    zipcode = snapshot.getValue(String.class);
+//                    reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
+//                }
+//                catch (Exception exception) {}
+//            }
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {}
+//        });
+//        Log.e("Saved", "" + savedInstanceState);
+//        binding = FragmentDonorBinding.inflate(inflater, container, false);
+//        binding.bottomNavigationView.setItemBackground(null);
+//        binding.bottomNavigationView.getMenu().findItem(R.id.placeholder).setEnabled(false);
+//        binding.bottomNavigationView.setSelectedItemId(R.id.Donor);
+//        binding.bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
+//        binding.foodDriveRecycler.setHasFixedSize(true);
+//        binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
+//        adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
+//        binding.foodDriveRecycler.setAdapter(adapter);
+//        executor.execute(() -> {
+//            for(;;) {
+//                // TODO: 9/10/2022 Find Better Solution for loadData()
+//                loadData();
+//                if(reference != null) {
+//                    loadData();
+//                    break;
+//                }
+//            }
+//        });
+//        binding.addButton.setOnClickListener(v -> {
+//            DonorDialogFragment dialog = new DonorDialogFragment();
+//            dialog.setTargetFragment(DonorFragment.this, 1);
+//            dialog.show(getFragmentManager(), "Dialog");
+//        });
+//        ((MainActivity) requireContext()).refreshReceiver.setOnClickListener(v -> refreshData());
+//        return binding.getRoot();
+//    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        userReference.child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                zipcode = snapshot.getValue(String.class);
-                reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
         Log.e("Saved", "" + savedInstanceState);
         binding = FragmentDonorBinding.inflate(inflater, container, false);
         binding.bottomNavigationView.setItemBackground(null);
@@ -84,8 +117,12 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         executor.execute(() -> {
             for(;;) {
                 // TODO: 9/10/2022 Find Better Solution for loadData()
-                loadData();
-                if(reference != null) {
+                try {
+                    zipcode = MainActivity.getZipcode();
+                    reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
+                }
+                catch (Exception exception) {}
+                if(reference != null && donorArrayList.size() == 0) {
                     loadData();
                     break;
                 }
@@ -136,17 +173,20 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
 
     private void refreshData() {
         donorArrayList.clear();
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+        try {
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                        donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    }
+                    adapter.notifyDataSetChanged();
                 }
-                adapter.notifyDataSetChanged();
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+        }
+        catch (Exception ignored) {}
     }
 
     @Override
