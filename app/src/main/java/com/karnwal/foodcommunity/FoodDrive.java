@@ -14,6 +14,8 @@ public class FoodDrive implements Serializable, Parcelable {
     private String additionalInformation = null;
     private String UUID;
     private String ownerUID;
+    private boolean isFoodDrive;
+    private String zipcode;
 
     public String getName() {
         return name;
@@ -43,6 +45,10 @@ public class FoodDrive implements Serializable, Parcelable {
         return additionalInformation;
     }
 
+    public Boolean getIsFoodDrive() {
+        return isFoodDrive;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -63,12 +69,24 @@ public class FoodDrive implements Serializable, Parcelable {
         this.additionalInformation = additionalInformation;
     }
 
+    public void setIsFoodDrive(boolean isFoodDrive) {
+        this.isFoodDrive = isFoodDrive;
+    }
+
     public String getOwnerUID() {
         return ownerUID;
     }
 
     public void setOwnerUID(String ownerUID) {
         this.ownerUID = ownerUID;
+    }
+
+    public String getZipcode() {
+        return zipcode;
+    }
+
+    public void setZipcode(String zipcode) {
+        this.zipcode = zipcode;
     }
 
     @Override
@@ -81,6 +99,8 @@ public class FoodDrive implements Serializable, Parcelable {
                 ", additionalInformation='" + additionalInformation + '\'' +
                 ", UUID='" + UUID + '\'' +
                 ", ownerUID='" + ownerUID + '\'' +
+                ", isFoodDrive=" + isFoodDrive +
+                ", zipcode='" + zipcode + '\'' +
                 '}';
     }
 

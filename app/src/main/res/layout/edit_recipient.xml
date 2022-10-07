@@ -7,7 +7,7 @@
     android:minWidth="325dp"
     android:minHeight="450dp">
     <ImageView
-        android:id="@+id/closeAlert"
+        android:id="@+id/editcloseAlert"
         android:layout_width="30sp"
         android:layout_height="30sp"
         android:layout_gravity="right"
@@ -15,15 +15,15 @@
         android:background="@drawable/ic_baseline_close_24"/>
 
     <EditText
-        android:id="@+id/name"
+        android:id="@+id/editname"
         android:layout_width="match_parent"
         android:layout_margin="10sp"
         android:layout_height="wrap_content"
         android:maxLength="1000"
-        android:hint="Enter name of Food Drive (Ex. John Food Drive)" />
+        android:hint="Enter name of Donation Request" />
 
     <EditText
-        android:id="@+id/address"
+        android:id="@+id/editaddress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
@@ -31,15 +31,15 @@
         android:hint="Enter Your Relative Location (Ex. Zipcode)" />
 
     <EditText
-        android:id="@+id/foodList"
+        android:id="@+id/editfoodList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
         android:maxLength="1000"
-        android:hint="Enter Food List" />
+        android:hint="Enter Food Requests" />
 
     <Button
-        android:id="@+id/chooseDate"
+        android:id="@+id/editchooseDate"
         android:layout_width="match_parent"
         android:text="Choose A Date and Time"
         android:backgroundTint="@color/purple_500"
@@ -49,7 +49,7 @@
 
 
     <EditText
-        android:id="@+id/additionalInformation"
+        android:id="@+id/editadditionalInformation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
@@ -57,9 +57,9 @@
         android:hint="Contact Information" />
 
     <Button
-        android:id="@+id/addButton"
+        android:id="@+id/editButton"
         android:layout_width="match_parent"
-        android:text="Add Food Drive"
+        android:text="Edit Donation Request"
         android:backgroundTint="@color/purple_500"
         android:textColor="@color/white"
         android:layout_margin="10sp"

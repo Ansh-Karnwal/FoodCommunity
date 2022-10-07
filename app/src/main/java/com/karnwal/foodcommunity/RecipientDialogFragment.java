@@ -21,25 +21,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
-import com.karnwal.foodcommunity.databinding.AddDonorBinding;
+import com.karnwal.foodcommunity.databinding.AddRecipientBinding;
 
 import java.util.Calendar;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class DonorDialogFragment extends DialogFragment {
+public class RecipientDialogFragment extends DialogFragment {
 
     public interface OnInputSelected {
         void sendInput(String name, String address, String foodList, String calendar, String additionalInformation);
     }
 
-    private OnInputSelected mOnInputSelected;
-    private AddDonorBinding binding;
+    private RecipientDialogFragment.OnInputSelected mOnInputSelected;
+    private AddRecipientBinding binding;
     private EditText mName, mAddress, mFoodList, mAdditionalInformation;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = AddDonorBinding.inflate(inflater, container, false);
+        binding = AddRecipientBinding.inflate(inflater, container, false);
         Window window = getDialog().getWindow();
         if (window != null) {
             WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
@@ -126,7 +125,7 @@ public class DonorDialogFragment extends DialogFragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         try {
-            mOnInputSelected = (OnInputSelected) getTargetFragment();
+            mOnInputSelected = (RecipientDialogFragment.OnInputSelected) getTargetFragment();
         }
         catch (ClassCastException classCastException) {
             Log.e("Error", "onAttach: ClassCastException : " + classCastException.getMessage());

@@ -1,196 +1,103 @@
 package com.karnwal.foodcommunity;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
 import android.os.Handler;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.karnwal.foodcommunity.databinding.ActivityMainBinding;
-import com.karnwal.foodcommunity.databinding.FragmentDonorBinding;
+import com.karnwal.foodcommunity.databinding.FragmentMyDonorBinding;
+import com.karnwal.foodcommunity.databinding.FragmentMyRequestsBinding;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-public class DonorFragment extends Fragment implements DonorDialogFragment.OnInputSelected {
 
-    private AlertDialog alertDialog;
-    private FragmentDonorBinding binding;
-    private DonorAdapter adapter;
-    private ArrayList<FoodDrive> donorArrayList = new ArrayList<>();
+public class MyRequestsFragment extends Fragment implements RecipientDialogFragment.OnInputSelected {
+
+    private FragmentMyRequestsBinding binding;
+    private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    private ArrayList<FoodDrive> recipientArrayList = new ArrayList<>();
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
     private DatabaseReference reference;
+    private DatabaseReference originReference = FirebaseDatabase.getInstance().getReference().child(Constants.ZIPCODES);
     private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
-    private Executor executor = Executors.newFixedThreadPool(2);
+    private DonorAdapter adapter;
+    private Executor executor = Executors.newFixedThreadPool(3);
+    private AlertDialog alertDialog;
     private String zipcode;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentDonorBinding.inflate(inflater, container, false);
-        binding.bottomNavigationView.setItemBackground(null);
-        binding.bottomNavigationView.getMenu().findItem(R.id.placeholder).setEnabled(false);
-        binding.bottomNavigationView.setSelectedItemId(R.id.Donor);
-        binding.bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
+        binding = FragmentMyRequestsBinding.inflate(inflater, container, false);
+        Bundle extras = ((MainActivity) getActivity()).getExtras();
+        if (extras != null) {
+            reference = FirebaseDatabase.getInstance().getReferenceFromUrl(extras.getString("databaseReference"));
+            zipcode = extras.getString("mZipcode");
+            getUserDonors();
+        }
         binding.foodDriveRecycler.setHasFixedSize(true);
         binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
-        adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
+        adapter = new DonorAdapter(this.getActivity(), recipientArrayList, this::editOnClick);
         binding.foodDriveRecycler.setAdapter(adapter);
-        executor.execute(() -> {
-            for(;;) {
-                // TODO: 9/10/2022 Find Better Solution for loadData()
-                try {
-                    if (zipcode == null) {
-                        zipcode = MainActivity.getZipcode();
-                    }
-                    reference = FirebaseDatabase.getInstance().getReference().child(Constants.ZIPCODES).child(zipcode);
-                }
-                catch (Exception exception) {}
-                if(reference != null && donorArrayList.size() == 0) {
-                    loadData();
-                    break;
-                }
-            }
-        });
-        binding.addButton.setOnClickListener(v -> {
-            DonorDialogFragment dialog = new DonorDialogFragment();
-            dialog.setTargetFragment(DonorFragment.this, 1);
+        binding.addButtonRedirect.setOnClickListener(v -> {
+            RecipientDialogFragment dialog = new RecipientDialogFragment();
+            dialog.setTargetFragment(MyRequestsFragment.this, 1);
             dialog.show(getFragmentManager(), "Dialog");
-        });
-        ImageButton refreshReceiver = ((MainActivity) requireContext()).refreshReceiver;
-        refreshReceiver.setOnClickListener(v -> {
-            float deg = refreshReceiver.getRotation() + 360F;
-            refreshReceiver.animate().rotation(deg).setInterpolator(new AccelerateDecelerateInterpolator());
-            refreshData();
         });
         return binding.getRoot();
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = (BottomNavigationView.OnNavigationItemSelectedListener) item -> {
-        Fragment selectedFragment = null;
-        switch (item.getItemId()) {
-            case R.id.Donor:
-                selectedFragment = new DonorFragment();
-                break;
-            case R.id.Recipient:
-                selectedFragment = new RecipientFragment();
-                break;
-        }
-        try {
-            getFragmentManager().beginTransaction().replace(R.id.fragment, selectedFragment).commit();
-        }
-        catch (Exception ignored) {}
-        return true;
-    };
-
-    private void loadData() {
-        try {
-            reference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        FoodDrive foodDrive = dataSnapshot.getValue(FoodDrive.class);
-                        if (foodDrive.getIsFoodDrive()) {
-                            donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+    private void getUserDonors() {
+        originReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
+                        if (dataSnapshot1.child(Constants.OWNERUID).getValue(String.class).equals(firebaseUser.getUid())) {
+                            if (!(dataSnapshot1.getValue(FoodDrive.class).getIsFoodDrive())) {
+                                recipientArrayList.add(dataSnapshot1.getValue(FoodDrive.class));
+                            }
                         }
                     }
-                    adapter.notifyDataSetChanged();
                 }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
-        }
-        catch (Exception ignored) {}
-    }
+                if (recipientArrayList.size() == 0)
+                    binding.textView3.setText("No Requests");
+                adapter.notifyDataSetChanged();
+            }
 
-    private void refreshData() {
-        donorArrayList.clear();
-        try {
-            reference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        if ((dataSnapshot.getValue(FoodDrive.class).getIsFoodDrive())) {
-                            donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
-                        }
-                    }
-                    adapter.notifyDataSetChanged();
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
-        }
-        catch (Exception ignored) {}
-    }
-
-    @Override
-    public void sendInput(String name, String address, String foodList, String calendar, String additionalInformation) {
-        addFoodDrive(name, address, foodList, calendar, additionalInformation);
-    }
-
-    private void addFoodDrive(String name, String address, String foodList, String calendar, String additionalInformation) {
-        FoodDrive foodDrive = new FoodDrive();
-        foodDrive.setName(name);
-        foodDrive.setAddress(address);
-        foodDrive.setFoodList(foodList);
-        foodDrive.setAdditionalInformation(additionalInformation);
-        foodDrive.setCalendar(calendar);
-        String uuid = String.valueOf(UUID.randomUUID());
-        foodDrive.setUUID(uuid);
-        foodDrive.setOwnerUID(firebaseUser.getUid());
-        foodDrive.setIsFoodDrive(true);
-        foodDrive.setZipcode(zipcode);
-        reference.child(uuid).setValue(foodDrive);
-        reference.child(uuid).child(Constants.UUID).setValue(uuid);
-        reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());
-        donorArrayList.add(foodDrive);
-        adapter = new DonorAdapter(this.getContext(), donorArrayList, this::editOnClick);
-        binding.foodDriveRecycler.setAdapter(adapter);
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 
     private void editOnClick(FoodDrive foodDrive, int currentPosition) {
-        View view = LayoutInflater.from(this.getContext()).inflate(R.layout.edit_donor, null);
+        View view = LayoutInflater.from(this.getContext()).inflate(R.layout.edit_recipient, null);
         AlertDialog.Builder builderObj = new AlertDialog.Builder(view.getContext());
         EditText name = view.findViewById(R.id.editname);
         EditText address = view.findViewById(R.id.editaddress);
@@ -304,15 +211,32 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
         foodDrive.setAdditionalInformation(strAdditionInformation);
         foodDrive.setCalendar(calendar);
         adapter.editData(foodDrive, currentPosition);
+//        passData();
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
+    public void sendInput(String name, String address, String foodList, String calendar, String additionalInformation) {
+        addFoodDrive(name, address, foodList, calendar, additionalInformation);
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    private void addFoodDrive(String name, String address, String foodList, String calendar, String additionalInformation) {
+        binding.textView3.setText("Your Contributions");
+        FoodDrive foodDrive = new FoodDrive();
+        foodDrive.setName(name);
+        foodDrive.setAddress(address);
+        foodDrive.setFoodList(foodList);
+        foodDrive.setAdditionalInformation(additionalInformation);
+        foodDrive.setCalendar(calendar);
+        String uuid = String.valueOf(UUID.randomUUID());
+        foodDrive.setUUID(uuid);
+        foodDrive.setOwnerUID(firebaseUser.getUid());
+        foodDrive.setIsFoodDrive(false);
+        foodDrive.setZipcode(zipcode);
+        reference.child(uuid).setValue(foodDrive);
+        reference.child(uuid).child(Constants.UUID).setValue(uuid);
+        reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());
+        recipientArrayList.add(foodDrive);
+        adapter = new DonorAdapter(this.getContext(), recipientArrayList, this::editOnClick);
+        binding.foodDriveRecycler.setAdapter(adapter);
     }
 }

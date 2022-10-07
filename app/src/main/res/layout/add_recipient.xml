@@ -20,7 +20,7 @@
         android:layout_margin="10sp"
         android:layout_height="wrap_content"
         android:maxLength="1000"
-        android:hint="Enter name of Food Drive (Ex. John Food Drive)" />
+        android:hint="Enter name of Donation Request" />
 
     <EditText
         android:id="@+id/address"
@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
         android:maxLength="1000"
-        android:hint="Enter Food List" />
+        android:hint="Enter Food Requests" />
 
     <Button
         android:id="@+id/chooseDate"
@@ -59,7 +59,7 @@
     <Button
         android:id="@+id/addButton"
         android:layout_width="match_parent"
-        android:text="Add Food Drive"
+        android:text="Add Donation Request"
         android:backgroundTint="@color/purple_500"
         android:textColor="@color/white"
         android:layout_margin="10sp"

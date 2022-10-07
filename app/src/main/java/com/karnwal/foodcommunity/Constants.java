@@ -10,4 +10,5 @@ public class Constants {
     public static final String FOODLIST = "foodList";
     public static final String ADDITIONALINFORMATION = "additionalInformation";
     public static final String OWNERUID = "ownerUID";
+    public static final String ZIPCODES = "zipcodes";
 }

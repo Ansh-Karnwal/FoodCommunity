@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -24,6 +25,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -74,6 +76,12 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     };
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            zipcode = intent.getStringExtra("mZipcode");
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_my_requests:
                     binding.refreshM.setVisibility(View.GONE);
-                    // TODO: 9/5/2022 Add Requests
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new MyRequestsFragment()).commit();
                     break;
             }
             binding.drawerLayout.closeDrawer(GravityCompat.START);
@@ -135,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
         }
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("Zipcode-Send"));
         try {
             geocoder = new Geocoder(this);
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -145,7 +154,8 @@ public class MainActivity extends AppCompatActivity {
 
     protected Bundle getExtras() {
         Bundle bundle = new Bundle();
-        bundle.putString("databaseReference", "" + mDataBase.child(zipcode));
+        bundle.putString("databaseReference", "" + mDataBase.child(Constants.ZIPCODES).child(zipcode));
+        bundle.putString("mZipcode", zipcode);
         return bundle;
     }
 

@@ -59,7 +59,7 @@ public class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.MyViewHolder
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 try {
                     zipcode = snapshot.getValue(String.class);
-                    reference = FirebaseDatabase.getInstance().getReference().child(zipcode);
+                    reference = FirebaseDatabase.getInstance().getReference().child(Constants.ZIPCODES).child(zipcode);
                 }
                 catch (Exception exception) {
                     Log.e("Exception ", "" + exception.getMessage());

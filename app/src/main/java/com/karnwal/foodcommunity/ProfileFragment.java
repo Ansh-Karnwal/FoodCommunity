@@ -5,10 +5,12 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,7 +23,7 @@ import com.karnwal.foodcommunity.databinding.FragmentProfileBinding;
 
 public class ProfileFragment extends Fragment {
 
-    FragmentProfileBinding binding;
+    private FragmentProfileBinding binding;
     private DatabaseReference mDataBase = FirebaseDatabase.getInstance().getReference();
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -44,7 +46,20 @@ public class ProfileFragment extends Fragment {
         binding.changeZipCode.setOnClickListener(v -> {
             mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue("" + binding.zipcodeText.getText());
             binding.zipcodeText.setHint("Change Zip Code " + "(" + binding.zipcodeText.getText() + ")");
+            if ((binding.zipcodeText.getText() + "").equals("users")) {
+                Toast.makeText(this.getActivity(), "Users zip code not allowed!", Toast.LENGTH_SHORT).show();
+            }
+            if ((binding.zipcodeText.getText() + "").equals("")) {
+                Toast.makeText(this.getActivity(), "Please enter a zipcode", Toast.LENGTH_SHORT).show();
+            }
+            sendZipcode(binding.zipcodeText.getText() + "");
         });
         return binding.getRoot();
+    }
+
+    private void sendZipcode(String zipcode) {
+        Intent intent = new Intent("Zipcode-Send");
+        intent.putExtra("mZipcode", zipcode);
+        LocalBroadcastManager.getInstance(this.getActivity()).sendBroadcast(intent);
     }
 }

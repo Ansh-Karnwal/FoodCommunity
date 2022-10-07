@@ -44,11 +44,13 @@ public class MyDonorFragment extends Fragment implements DonorDialogFragment.OnI
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     private ArrayList<FoodDrive> donorArrayList = new ArrayList<>();
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+    private DatabaseReference originReference = FirebaseDatabase.getInstance().getReference().child(Constants.ZIPCODES);
     private DatabaseReference reference;
     private DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child(Constants.USERS).child(firebaseUser.getUid());
     private DonorAdapter adapter;
     private Executor executor = Executors.newFixedThreadPool(3);
     private AlertDialog alertDialog;
+    private String zipcode;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,8 +58,8 @@ public class MyDonorFragment extends Fragment implements DonorDialogFragment.OnI
         Bundle extras = ((MainActivity) getActivity()).getExtras();
         if (extras != null) {
             reference = FirebaseDatabase.getInstance().getReferenceFromUrl(extras.getString("databaseReference"));
+            zipcode = extras.getString("mZipcode");
             getUserDonors();
-
         }
         binding.foodDriveRecycler.setHasFixedSize(true);
         binding.foodDriveRecycler.setLayoutManager(new LinearLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false));
@@ -72,12 +74,16 @@ public class MyDonorFragment extends Fragment implements DonorDialogFragment.OnI
     }
 
     private void getUserDonors() {
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+        originReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    if (dataSnapshot.child(Constants.OWNERUID).getValue(String.class).equals(firebaseUser.getUid())) {
-                        donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
+                    for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
+                        if (dataSnapshot1.child(Constants.OWNERUID).getValue(String.class).equals(firebaseUser.getUid())) {
+                            if ((dataSnapshot1.getValue(FoodDrive.class).getIsFoodDrive())) {
+                                donorArrayList.add(dataSnapshot1.getValue(FoodDrive.class));
+                            }
+                        }
                     }
                 }
                 if (donorArrayList.size() == 0)
@@ -224,6 +230,8 @@ public class MyDonorFragment extends Fragment implements DonorDialogFragment.OnI
         String uuid = String.valueOf(UUID.randomUUID());
         foodDrive.setUUID(uuid);
         foodDrive.setOwnerUID(firebaseUser.getUid());
+        foodDrive.setIsFoodDrive(true);
+        foodDrive.setZipcode(zipcode);
         reference.child(uuid).setValue(foodDrive);
         reference.child(uuid).child(Constants.UUID).setValue(uuid);
         reference.child(uuid).child(Constants.OWNERUID).setValue(firebaseUser.getUid());

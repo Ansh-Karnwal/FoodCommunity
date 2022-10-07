@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10sp"
         android:maxLength="1000"
-        android:hint="Enter Your Address" />
+        android:hint="Enter Your Relative Location (Ex. Zipcode)" />
 
     <EditText
         android:id="@+id/editfoodList"
