@@ -130,8 +130,7 @@ public class DonorFragment extends Fragment implements DonorDialogFragment.OnInp
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        FoodDrive foodDrive = dataSnapshot.getValue(FoodDrive.class);
-                        if (foodDrive.getIsFoodDrive()) {
+                        if ((dataSnapshot.getValue(FoodDrive.class).getIsFoodDrive())) {
                             donorArrayList.add(dataSnapshot.getValue(FoodDrive.class));
                         }
                     }

@@ -115,8 +115,7 @@ public class RecipientFragment extends Fragment implements RecipientDialogFragme
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        FoodDrive foodDrive = dataSnapshot.getValue(FoodDrive.class);
-                        if (!foodDrive.getIsFoodDrive()) {
+                        if (!(dataSnapshot.getValue(FoodDrive.class).getIsFoodDrive())) {
                             recipientArrayList.add(dataSnapshot.getValue(FoodDrive.class));
                         }
                     }
