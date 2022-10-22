@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,25 +7,45 @@
     tools:context=".DonorFragment"
     android:orientation="vertical">
 
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottomAppBar"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:backgroundTint="#C9000000"
-        app:fabCradleMargin="10dp"
-        app:fabCradleRoundedCornerRadius="10dp"
-        app:fabCradleVerticalOffset="10dp"
-        tools:ignore="BottomAppBar" />
+        android:layout_height="match_parent"
+        android:elevation="100dp">
+        <com.google.android.material.bottomappbar.BottomAppBar
+            android:id="@+id/bottomAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="#C9000000"
+            android:backgroundTint="#C9000000"
+            app:fabCradleMargin="10dp"
+            app:fabCradleRoundedCornerRadius="10dp"
+            app:fabCradleVerticalOffset="10dp"
+            tools:ignore="BottomAppBar" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/app_name"
-        android:src="@drawable/ic_baseline_add_24"
-        android:backgroundTint="@color/purple_500"
-        app:layout_anchor="@id/bottomAppBar" app:backgroundTint="@color/purple_500"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/ic_baseline_add_24"
+            android:backgroundTint="@color/purple_500"
+            app:layout_anchor="@id/bottomAppBar" app:backgroundTint="@color/purple_500"/>
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginEnd="16dp"
+            android:background="@android:color/transparent"
+            android:backgroundTint="@android:color/transparent"
+            android:outlineAmbientShadowColor="@android:color/transparent"
+            android:outlineSpotShadowColor="@android:color/transparent"
+            app:menu="@menu/bottom_nav_menu" />
+
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/foodDriveRecycler"
@@ -33,42 +53,82 @@
         android:layout_height="match_parent"
         android:layout_marginTop="65dp"/>
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottomNavigationView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_marginEnd="16dp"
-                android:background="@android:color/transparent"
-                android:backgroundTint="@android:color/transparent"
-                android:outlineAmbientShadowColor="@android:color/transparent"
-                android:outlineSpotShadowColor="@android:color/transparent"
-                app:menu="@menu/bottom_nav_menu" />
+</RelativeLayout>
+<!--<?xml version="1.0" encoding="utf-8"?>-->
+<!--<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    xmlns:tools="http://schemas.android.com/tools"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"-->
+<!--    tools:context=".DonorFragment"-->
+<!--    android:orientation="vertical">-->
 
-<!--    <Button-->
-<!--        android:id="@+id/refresh"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Button"-->
-<!--        android:layout_gravity="top|right"/>-->
-
-
-    <!--    <ImageButton-->
-<!--        android:id="@+id/refresh"-->
-<!--        android:layout_width="wrap_content"-->
+<!--    <com.google.android.material.bottomappbar.BottomAppBar-->
+<!--        android:id="@+id/bottomAppBar"-->
+<!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="wrap_content"-->
 <!--        android:layout_gravity="bottom"-->
-<!--        android:layout_marginBottom="10dp"-->
+<!--        android:background="#C9FF0000"-->
+<!--        android:backgroundTint="#C9FF0000"-->
+<!--        app:fabCradleMargin="10dp"-->
+<!--        app:fabCradleRoundedCornerRadius="10dp"-->
+<!--        app:fabCradleVerticalOffset="10dp"-->
+<!--        tools:ignore="BottomAppBar" />-->
+
+<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--        android:id="@+id/addButton"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:contentDescription="@string/app_name"-->
+<!--        android:src="@drawable/ic_baseline_add_24"-->
+<!--        android:backgroundTint="@color/purple_500"-->
+<!--        app:layout_anchor="@id/bottomAppBar" app:backgroundTint="@color/purple_500"/>-->
+
+<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+<!--        android:id="@+id/bottomNavigationView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_gravity="bottom"-->
+<!--        android:layout_marginEnd="16dp"-->
 <!--        android:background="@android:color/transparent"-->
-<!--        android:src="@drawable/sync_48px" />-->
+<!--        android:backgroundTint="@android:color/transparent"-->
+<!--        android:outlineAmbientShadowColor="@android:color/transparent"-->
+<!--        android:outlineSpotShadowColor="@android:color/transparent"-->
+<!--        app:menu="@menu/bottom_nav_menu" />-->
 
-<!--    <ImageButton-->
-<!--        android:id="@+id/refresh"-->
-<!--        android:layout_width="100dp"-->
-<!--        android:layout_height="100dp"-->
-<!--        android:layout_gravity="top|right"-->
-<!--        android:layout_marginBottom="10dp"-->
-<!--        android:background="@color/purple_500"-->
-<!--        android:src="@drawable/sync_48px_black" />-->
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/foodDriveRecycler"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_marginTop="65dp"/>-->
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+<!--&lt;!&ndash;    <Button&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/refresh"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_width="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:text="Button"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_gravity="top|right"/>&ndash;&gt;-->
+
+
+<!--    &lt;!&ndash;    <ImageButton&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/refresh"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_width="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_gravity="bottom"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_marginBottom="10dp"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:background="@android:color/transparent"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:src="@drawable/sync_48px" />&ndash;&gt;-->
+
+<!--&lt;!&ndash;    <ImageButton&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/refresh"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_width="100dp"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_height="100dp"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_gravity="top|right"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:layout_marginBottom="10dp"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:background="@color/purple_500"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:src="@drawable/sync_48px_black" />&ndash;&gt;-->
+
+<!--</androidx.coordinatorlayout.widget.CoordinatorLayout>-->
+

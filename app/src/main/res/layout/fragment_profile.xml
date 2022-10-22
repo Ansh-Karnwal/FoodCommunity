@@ -14,6 +14,36 @@
         android:layout_marginBottom="40dp"
         android:text="Log Out"/>
 
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="65dp"
+        android:layout_gravity="center|top"
+        android:layout_height="wrap_content"
+        android:textSize="32dp"
+        android:textColor="@color/purple_500"
+        android:text="Food Community"/>
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="100dp"
+        android:layout_gravity="center|top"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textColor="@color/purple_500"
+        android:text="Version 1.0.0"/>
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="125dp"
+        android:layout_gravity="center|top"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textColor="@color/purple_500"
+        android:text="Contact: anshk.developer@gmail.com \n\t\t\t\t\t\t\t\t\t\tto remove account"/>
+
     <Button
         android:id="@+id/changeZipCode"
         android:layout_width="wrap_content"

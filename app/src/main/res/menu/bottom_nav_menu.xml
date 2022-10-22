@@ -12,5 +12,5 @@
     <item
         android:id="@+id/Recipient"
         android:icon="@drawable/need"
-        android:title="Recipient" />
+        android:title="Requests" />
 </menu>

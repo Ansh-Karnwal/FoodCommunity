@@ -7,14 +7,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -24,7 +29,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -46,7 +53,10 @@ import com.karnwal.foodcommunity.databinding.ActivityMainBinding;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     protected static String zipcode;
     protected ImageButton refreshReceiver;
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -82,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
             zipcode = intent.getStringExtra("mZipcode");
         }
     };
+    private final String PREFS_NAME = "PREFERENCES";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,13 +103,69 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         binding.navView.setCheckedItem(R.id.nav_home);
-//        if (!haveNetworkConnection()) {
-//            Dialog dialog = new Dialog(MainActivity.this);
-//            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//            dialog.setCancelable(false);
-//            dialog.setContentView(R.layout.no_wifi_dialog);
-//            dialog.show();
-//        }
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        boolean dialogShown = settings.getBoolean("dialogShown", false);
+        if (!dialogShown) {
+            this.runOnUiThread(() -> {
+                AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+            builder1.setMessage("Welcome to Food Community");
+            builder1.setCancelable(false);
+            builder1.setPositiveButton(
+                    "Next",
+                    (dialog, id) -> {
+                        AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
+                        builder2.setMessage("Right now you are currently in the donor section\n\nHere you can put up donations for extra food that you have\n\n" +
+                                "To add a donation click on the + button" +
+                                "\n\nYou will also see other people's food donations here");
+                        builder2.setCancelable(false);
+                        builder2.setPositiveButton(
+                                "Next",
+                                (dialog12, id12) -> {
+                                    AlertDialog.Builder builder3 = new AlertDialog.Builder(this);
+                                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new RecipientFragment()).commit();
+                                    builder3.setMessage("Now you are in the recipient section\n\nHere you can request for food by clicking the + button and" +
+                                            " entering the information");
+                                    builder3.setCancelable(false);
+                                    builder3.setPositiveButton(
+                                            "Next",
+                                            (dialog123, id123) -> {
+                                                AlertDialog.Builder builder4 = new AlertDialog.Builder(this);
+                                                builder4.setMessage("To access all of your donations, requests and settings click on the three lines on the top left\n\n" +
+                                                        "To refresh the data click on the icon on the top right");
+                                                builder4.setCancelable(false);
+                                                builder4.setPositiveButton(
+                                                        "Finish",
+                                                        (dialog1234, id1234) -> dialog1234.cancel());
+                                                builder4.setNegativeButton(
+                                                        "Back",
+                                                        (dialog1, id1) -> {
+                                                            builder3.create().show();
+                                                        });
+                                                AlertDialog alert11 = builder4.create();
+                                                alert11.show();
+                                            });
+                                    builder3.setNegativeButton(
+                                            "Back",
+                                            (dialog1, id1) -> {
+                                                builder2.create().show();
+                                                getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new DonorFragment()).commit();
+                                            });
+                                    AlertDialog alert11 = builder3.create();
+                                    alert11.show();
+                                });
+                        builder2.setNegativeButton(
+                                "Back",
+                                (dialog1, id1) -> builder1.create().show());
+                        AlertDialog alert11 = builder2.create();
+                        alert11.show();
+                    });
+            AlertDialog alert11 = builder1.create();
+            alert11.show();
+            });
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean("dialogShown", true);
+            editor.commit();
+        }
         binding.navView.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.nav_home:
@@ -162,45 +230,48 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case 101:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    try {
-                        addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 10);
-                        Address address = addresses.get(0);
-                        zipcode = address.getPostalCode();
-                        mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue(address.getPostalCode());
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    catch (Exception exception) {
-                    }
-                }
-                else {
-                    mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if (snapshot.exists()) {
-                                zipcode = snapshot.getValue(String.class);
-                            }
-                            else {
-                                Toast.makeText(MainActivity.this, "Enter Zip Code Manually", Toast.LENGTH_LONG).show();
-                                openDialog();
-                            }
+        try {
+            switch (requestCode) {
+                case 101:
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            return;
                         }
+                        try {
+                            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 10);
+                            Address address = addresses.get(0);
+                            zipcode = address.getPostalCode();
+                            mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).setValue(address.getPostalCode());
+                        }
+                        catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        catch (Exception exception) {
+                        }
+                    }
+                    else {
+                        mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                if (snapshot.exists()) {
+                                    zipcode = snapshot.getValue(String.class);
+                                }
+                                else {
+                                    Toast.makeText(MainActivity.this, "Enter Zip Code Manually", Toast.LENGTH_LONG).show();
+                                    openDialog();
+                                }
+                            }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
-                    });
-                }
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {}
+                        });
+                    }
+                    break;
+                default:
+                    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
         }
+        catch (Exception exception) {}
     }
 
     private void openDialog() {
@@ -228,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
