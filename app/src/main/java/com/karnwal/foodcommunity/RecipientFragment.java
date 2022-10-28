@@ -67,7 +67,7 @@ public class RecipientFragment extends Fragment implements RecipientDialogFragme
                 // TODO: 9/10/2022 Find Better Solution for loadData()
                 try {
                     if (zipcode == null) {
-                        zipcode = MainActivity.getZipcode();
+                        zipcode = ((MainActivity) requireActivity()).getZipcode();
                     }
                     reference = FirebaseDatabase.getInstance().getReference().child(Constants.ZIPCODES).child(zipcode);
                 }

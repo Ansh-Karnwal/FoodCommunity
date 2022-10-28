@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
@@ -30,6 +31,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -87,6 +89,28 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     };
+    private BroadcastReceiver broadcastReceiverLocation = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            AlertDialog.Builder alertDialogInitial = new AlertDialog.Builder(context)
+                    .setCancelable(false)
+                    .setMessage("Location Services are turned off\n\nPlease turn them on if you wish to continue using the application")
+                    .setPositiveButton("Retry", (dialog, id) -> {});
+            AlertDialog dialog = alertDialogInitial.create();
+            if (!isLocationEnabled(MainActivity.this)) {
+                dialog.show();
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                    if (!isLocationEnabled(MainActivity.this)) {
+                        Toast.makeText(MainActivity.this, "Please retry again", Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        dialog.dismiss();
+                        openDialog();
+                    }
+                });
+            }
+        }
+    };
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -135,7 +159,10 @@ public class MainActivity extends AppCompatActivity {
                                                 builder4.setCancelable(false);
                                                 builder4.setPositiveButton(
                                                         "Finish",
-                                                        (dialog1234, id1234) -> dialog1234.cancel());
+                                                        (dialog1234, id1234) -> {
+                                                            getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new DonorFragment()).commit();
+                                                            dialog1234.cancel();
+                                                        });
                                                 builder4.setNegativeButton(
                                                         "Back",
                                                         (dialog1, id1) -> {
@@ -207,6 +234,23 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception exception) {}
         userName.setText(user.getDisplayName());
         email.setText(user.getEmail());
+        AlertDialog.Builder alertDialogInitial = new AlertDialog.Builder(this)
+                .setCancelable(false)
+                .setMessage("Location Services are turned off\n\nPlease turn them on if you wish to continue using the application")
+                .setPositiveButton("Retry", (dialog, id) -> {});
+        AlertDialog dialog = alertDialogInitial.create();
+        if (!isLocationEnabled(this)) {
+            dialog.show();
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                if (!isLocationEnabled(MainActivity.this)) {
+                    Toast.makeText(MainActivity.this, "Please retry again", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    dialog.dismiss();
+                    openDialog();
+                }
+            });
+        }
         LocationManager locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
@@ -218,9 +262,23 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ignored) {
         }
         refreshReceiver = binding.refreshM;
+        if (zipcode == null) {
+            try {
+                mDataBase.child(Constants.USERS).child(user.getUid()).child(Constants.ZIPCODE).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        zipcode = snapshot.getValue(String.class);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+            }
+            catch (Exception exception) {}
+        }
     }
 
     protected Bundle getExtras() {
+        openDialog();
         Bundle bundle = new Bundle();
         bundle.putString("databaseReference", "" + mDataBase.child(Constants.ZIPCODES).child(zipcode));
         bundle.putString("mZipcode", zipcode);
@@ -274,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception exception) {}
     }
 
-    private void openDialog() {
+    public void openDialog() {
         Dialog dialog = new Dialog(MainActivity.this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(false);
@@ -342,20 +400,37 @@ public class MainActivity extends AppCompatActivity {
         return haveConnectedWifi || haveConnectedMobile;
     }
 
-    protected static String getZipcode() {
+    private static Boolean isLocationEnabled(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            return lm.isLocationEnabled();
+        } else {
+            int mode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE,
+                    Settings.Secure.LOCATION_MODE_OFF);
+            return (mode != Settings.Secure.LOCATION_MODE_OFF);
+        }
+    }
+
+    protected String getZipcode() {
+        if (zipcode == null) {
+            openDialog();
+        }
         return zipcode;
     }
 
     @Override
     protected void onStart() {
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        IntentFilter filter1 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);
         registerReceiver(broadcastReceiver, filter);
+        registerReceiver(broadcastReceiverLocation, filter1);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
         unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(broadcastReceiverLocation);
         super.onStop();
     }
 }

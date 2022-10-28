@@ -32,10 +32,39 @@
         android:layout_marginEnd="87dp"
         android:layout_marginBottom="550dp"
         android:text="Food Community"
-        android:textSize="32dp"
+        android:textSize="40dp"
         app:layout_constraintBottom_toTopOf="@+id/signIn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="97dp"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="98dp"
+        android:text="Combating Hunger Together"
+        android:textColor="@color/purple_500"
+        android:textSize="17dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/foodCommunityTextView" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="240dp"
+        android:layout_height="326dp"
+        android:layout_marginStart="85dp"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="86dp"
+        android:layout_marginBottom="217dp"
+        app:layout_constraintBottom_toTopOf="@+id/signIn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:srcCompat="@drawable/istockphoto_1223248918_612x612_removebg_preview" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
