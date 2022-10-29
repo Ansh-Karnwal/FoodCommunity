@@ -1,5 +1,6 @@
 package com.karnwal.foodcommunity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -21,11 +22,15 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.karnwal.foodcommunity.databinding.FragmentProfileBinding;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
     private DatabaseReference mDataBase = FirebaseDatabase.getInstance().getReference();
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -54,12 +59,20 @@ public class ProfileFragment extends Fragment {
             }
             sendZipcode(binding.zipcodeText.getText() + "");
         });
+        binding.openHelpDialog.setOnClickListener(v -> {
+            callDialog();
+        });
         return binding.getRoot();
     }
 
     private void sendZipcode(String zipcode) {
         Intent intent = new Intent("Zipcode-Send");
         intent.putExtra("mZipcode", zipcode);
+        LocalBroadcastManager.getInstance(this.getActivity()).sendBroadcast(intent);
+    }
+
+    private void callDialog() {
+        Intent intent = new Intent("Call-Dialog");
         LocalBroadcastManager.getInstance(this.getActivity()).sendBroadcast(intent);
     }
 }

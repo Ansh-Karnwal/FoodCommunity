@@ -117,6 +117,71 @@ public class MainActivity extends AppCompatActivity {
             zipcode = intent.getStringExtra("mZipcode");
         }
     };
+    private BroadcastReceiver dialogCaller = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            MainActivity.this.runOnUiThread(() -> {
+                AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this);
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new DonorFragment()).commit();
+                builder1.setMessage("Welcome to Food Community");
+                builder1.setCancelable(false);
+                builder1.setPositiveButton(
+                        "Next",
+                        (dialog, id) -> {
+                            AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
+                            builder2.setMessage("Right now you are currently in the donor section\n\nHere you can put up donations for extra food that you have\n\n" +
+                                    "To add a donation click on the + button" +
+                                    "\n\nYou will also see other people's food donations here");
+                            builder2.setCancelable(false);
+                            builder2.setPositiveButton(
+                                    "Next",
+                                    (dialog12, id12) -> {
+                                        AlertDialog.Builder builder3 = new AlertDialog.Builder(MainActivity.this);
+                                        getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new RecipientFragment()).commit();
+                                        builder3.setMessage("Now you are in the recipient section\n\nHere you can request for food by clicking the + button and" +
+                                                " entering the information");
+                                        builder3.setCancelable(false);
+                                        builder3.setPositiveButton(
+                                                "Next",
+                                                (dialog123, id123) -> {
+                                                    AlertDialog.Builder builder4 = new AlertDialog.Builder(MainActivity.this);
+                                                    builder4.setMessage("To access all of your donations, requests and settings click on the three lines on the top left\n\n" +
+                                                            "To refresh the data click on the icon on the top right");
+                                                    builder4.setCancelable(false);
+                                                    builder4.setPositiveButton(
+                                                            "Finish",
+                                                            (dialog1234, id1234) -> {
+                                                                getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new ProfileFragment()).commit();
+                                                                dialog1234.cancel();
+                                                            });
+                                                    builder4.setNegativeButton(
+                                                            "Back",
+                                                            (dialog1, id1) -> {
+                                                                builder3.create().show();
+                                                            });
+                                                    AlertDialog alert11 = builder4.create();
+                                                    alert11.show();
+                                                });
+                                        builder3.setNegativeButton(
+                                                "Back",
+                                                (dialog1, id1) -> {
+                                                    builder2.create().show();
+                                                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new DonorFragment()).commit();
+                                                });
+                                        AlertDialog alert11 = builder3.create();
+                                        alert11.show();
+                                    });
+                            builder2.setNegativeButton(
+                                    "Back",
+                                    (dialog1, id1) -> builder1.create().show());
+                            AlertDialog alert11 = builder2.create();
+                            alert11.show();
+                        });
+                AlertDialog alert11 = builder1.create();
+                alert11.show();
+            });
+        }
+    };
     private final String PREFS_NAME = "PREFERENCES";
 
     @Override
@@ -256,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("Zipcode-Send"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(dialogCaller, new IntentFilter("Call-Dialog"));
         try {
             geocoder = new Geocoder(this);
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -278,7 +344,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected Bundle getExtras() {
-        openDialog();
         Bundle bundle = new Bundle();
         bundle.putString("databaseReference", "" + mDataBase.child(Constants.ZIPCODES).child(zipcode));
         bundle.putString("mZipcode", zipcode);

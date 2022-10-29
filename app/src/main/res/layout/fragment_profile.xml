@@ -63,4 +63,12 @@
         android:inputType="textPersonName"
         android:minHeight="48dp" />
 
+    <Button
+        android:id="@+id/openHelpDialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|top"
+        android:layout_marginTop="200dp"
+        android:text="How to use the app" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
