@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                         "Next",
                         (dialog, id) -> {
                             AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
-                            builder2.setMessage("Right now you are currently in the donor section\n\nHere you can put up donations for extra food that you have\n\n" +
+                            builder2.setMessage("Right now you are currently in the donations section\n\nHere you can put up donations for extra food that you have\n\n" +
                                     "To add a donation click on the + button" +
                                     "\n\nYou will also see other people's food donations here");
                             builder2.setCancelable(false);
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                                     (dialog12, id12) -> {
                                         AlertDialog.Builder builder3 = new AlertDialog.Builder(MainActivity.this);
                                         getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new RecipientFragment()).commit();
-                                        builder3.setMessage("Now you are in the recipient section\n\nHere you can request for food by clicking the + button and" +
+                                        builder3.setMessage("Now you are in the requests section\n\nHere you can request for food by clicking the + button and" +
                                                 " entering the information");
                                         builder3.setCancelable(false);
                                         builder3.setPositiveButton(
@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     "Next",
                     (dialog, id) -> {
                         AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
-                        builder2.setMessage("Right now you are currently in the donor section\n\nHere you can put up donations for extra food that you have\n\n" +
+                        builder2.setMessage("Right now you are currently in the donations section\n\nHere you can put up donations for extra food that you have\n\n" +
                                 "To add a donation click on the + button" +
                                 "\n\nYou will also see other people's food donations here");
                         builder2.setCancelable(false);
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                                 (dialog12, id12) -> {
                                     AlertDialog.Builder builder3 = new AlertDialog.Builder(this);
                                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new RecipientFragment()).commit();
-                                    builder3.setMessage("Now you are in the recipient section\n\nHere you can request for food by clicking the + button and" +
+                                    builder3.setMessage("Now you are in the requests section\n\nHere you can request for food by clicking the + button and" +
                                             " entering the information");
                                     builder3.setCancelable(false);
                                     builder3.setPositiveButton(

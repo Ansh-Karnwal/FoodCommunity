@@ -3,7 +3,7 @@
     <item
         android:id="@+id/Donor"
         android:icon="@drawable/groups"
-        android:title="Donor" />
+        android:title="Donations" />
 
     <item
         android:id="@+id/placeholder"
