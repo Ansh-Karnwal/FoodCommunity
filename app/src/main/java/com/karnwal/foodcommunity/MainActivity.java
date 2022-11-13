@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                                                 (dialog123, id123) -> {
                                                     AlertDialog.Builder builder4 = new AlertDialog.Builder(MainActivity.this);
                                                     builder4.setMessage("To access all of your donations, requests and settings click on the three lines on the top left\n\n" +
-                                                            "To refresh the data click on the icon on the top right");
+                                                            "To refresh the data click on the icon on the top right\n\nNote: You will only be able to see donations and requests within your zipcode");
                                                     builder4.setCancelable(false);
                                                     builder4.setPositiveButton(
                                                             "Finish",
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
                                             (dialog123, id123) -> {
                                                 AlertDialog.Builder builder4 = new AlertDialog.Builder(this);
                                                 builder4.setMessage("To access all of your donations, requests and settings click on the three lines on the top left\n\n" +
-                                                        "To refresh the data click on the icon on the top right");
+                                                        "To refresh the data click on the icon on the top right\n\nNote: You will only be able to see donations and requests within your zipcode");
                                                 builder4.setCancelable(false);
                                                 builder4.setPositiveButton(
                                                         "Finish",
